@@ -39,6 +39,7 @@ class Admin extends MY_Controller
         }
         $data['questions_tl']  = $this->Question_model->get_by_role(2);
         $data['questions_emp'] = $this->Question_model->get_by_role(3);
+        $data['questions_emp_to_emp'] = $this->Question_model->get_by_role(4);
         $this->load->view('admin/questions',$data);
     }
 
@@ -75,5 +76,158 @@ class Admin extends MY_Controller
             'submission' => $submission,
             'answers' => $answers
         ]));
+    }
+
+    public function performance()
+    {
+        // Load dependencies
+        $this->load->model(['Submission_model','Question_model']);
+
+        // Read filters from query string
+        $filter_tl     = $this->input->get('tl_id');
+        $filter_period = $this->input->get('period_id');
+        $filter_level  = $this->input->get('level'); // outstanding|good|average|bad|null
+
+        // Base data for dropdowns / filters
+        $data['tls']          = $this->User_model->all_tl();
+        $data['periods']      = $this->Submission_model->get_all_periods();
+        $data['filter_tl']    = $filter_tl;
+        $data['filter_period']= $filter_period;
+        $data['filter_level'] = $filter_level;
+
+        // Fetch submissions using existing helper (no rating-type filter here)
+        $submissions = $this->Submission_model->list_filtered($filter_tl, $filter_period, null);
+
+        // If performance filter is requested, further narrow down the list
+        if ($filter_level) {
+            $filtered = [];
+            foreach ($submissions as $s) {
+                $answers = $this->Submission_model->get_answers($s->id);
+                $keep = false;
+                foreach ($answers as $a) {
+                    $rating = (int)$a->rating;
+                    switch ($filter_level) {
+                        case 'outstanding':
+                            if ($rating >= 8) $keep = true;
+                            break;
+                        case 'good':
+                            if ($rating >= 5 && $rating < 8) $keep = true;
+                            break;
+                        case 'average':
+                            if ($rating >= 3 && $rating < 5) $keep = true;
+                            break;
+                        case 'bad':
+                            if ($rating < 3) $keep = true;
+                            break;
+                    }
+                    if ($keep) break; // No need to check further answers
+                }
+                if ($keep) $filtered[] = $s;
+            }
+            $submissions = $filtered;
+        }
+
+        $data['submissions'] = $submissions;
+        $data['questions']   = $this->db->get('questions')->result();
+
+        $this->load->view('admin/performance', $data);
+    }
+
+    public function update_question()
+    {
+        // Only allow POST requests
+        if ($this->input->method() !== 'post') {
+            $this->output->set_status_header(405);
+            $this->output->set_content_type('application/json');
+            $this->output->set_output(json_encode(['error' => 'Method not allowed']));
+            return;
+        }
+        
+        $id = $this->input->post('id');
+        $text = $this->input->post('text');
+        
+        if (!$id || !$text) {
+            $this->output->set_status_header(400);
+            $this->output->set_content_type('application/json');
+            $this->output->set_output(json_encode(['error' => 'Missing required fields']));
+            return;
+        }
+        
+        // Update the question
+        $result = $this->Question_model->update($id, $text);
+        
+        $this->output->set_content_type('application/json');
+        if ($result) {
+            $this->output->set_output(json_encode(['success' => true]));
+        } else {
+            $this->output->set_status_header(500);
+            $this->output->set_output(json_encode(['error' => 'Failed to update question']));
+        }
+    }
+
+    public function update_user()
+    {
+        // Only allow POST requests
+        if ($this->input->method() !== 'post') {
+            $this->output->set_status_header(405);
+            $this->output->set_content_type('application/json');
+            $this->output->set_output(json_encode(['error' => 'Method not allowed']));
+            return;
+        }
+        
+        $id = $this->input->post('id');
+        if (!$id) {
+            $this->output->set_status_header(400);
+            $this->output->set_content_type('application/json');
+            $this->output->set_output(json_encode(['error' => 'Missing user ID']));
+            return;
+        }
+        
+        // Get data to update
+        $updateData = [];
+        
+        // Check which fields are being updated
+        if ($this->input->post('name')) {
+            $updateData['name'] = $this->input->post('name');
+        }
+        
+        if ($this->input->post('email')) {
+            $updateData['email'] = $this->input->post('email');
+        }
+        
+        if ($this->input->post('tl_id') !== null) {
+            $updateData['tl_id'] = $this->input->post('tl_id') ?: null;
+        }
+        
+        if ($this->input->post('role_id')) {
+            $updateData['role_id'] = $this->input->post('role_id');
+        }
+        
+        // Update the user
+        $result = $this->User_model->update($id, $updateData);
+        
+        $this->output->set_content_type('application/json');
+        if ($result) {
+            // If role or TL changed, we need to send back additional data
+            $data = ['success' => true];
+            
+            // If TL selection changed, provide TL name
+            if (isset($updateData['tl_id']) && $updateData['tl_id']) {
+                $tl = $this->User_model->find($updateData['tl_id']);
+                if ($tl) {
+                    $data['tl_name'] = $tl->name;
+                }
+            }
+            
+            // If role changed, provide role name
+            if (isset($updateData['role_id'])) {
+                $data['role_name'] = $updateData['role_id'] == 2 ? 'TL' : 'Employee';
+            }
+            
+            $this->output->set_output(json_encode($data));
+        } else {
+            $this->output->set_status_header(500);
+            $this->output->set_output(json_encode(['error' => 'Failed to update user']));
+        }
     }
 }

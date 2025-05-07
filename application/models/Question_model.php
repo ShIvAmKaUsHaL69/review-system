@@ -10,4 +10,9 @@ class Question_model extends CI_Model
     {
         $this->db->insert('questions', ['text' => $text, 'for_role' => $for_role]);
     }
+
+    public function update($id, $text)
+    {
+        return $this->db->update('questions', ['text' => $text], ['id' => $id]);
+    }
 }

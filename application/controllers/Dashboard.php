@@ -19,8 +19,8 @@ class Dashboard extends MY_Controller
     /* ─────────── Super-admin pages ─────────── */
     private function _admin()
     {
-        // Use the Admin model directly 
-        $this->load->model(['Submission_model']);
+        // Load required models
+        $this->load->model(['Submission_model','Question_model']);
         
         // Get filter values from GET params
         $filter_tl = $this->input->get('tl_id');
@@ -37,6 +37,9 @@ class Dashboard extends MY_Controller
         // Apply filters to data
         $data['submissions'] = $this->Submission_model->list_filtered($filter_tl, $filter_period, $filter_type);
         $data['employees'] = $this->User_model->all_employees();
+        
+        // Pass all questions to the view so we can show them as columns
+        $data['questions'] = $this->db->get('questions')->result();
         
         $this->load->view('admin/dashboard',$data);
     }
@@ -55,7 +58,8 @@ class Dashboard extends MY_Controller
         }
         $data['can_submit'] = $can_submit;
         
-        $this->load->view('tl/dashboard',$data);
+        // Load the correct TL dashboard view
+        $this->load->view('tl/dashboard', $data);
     }
 
     /* ─────────── Employee dashboard ─────────── */
@@ -75,6 +79,7 @@ class Dashboard extends MY_Controller
         }
         $data['can_submit'] = $can_submit;
         
-        $this->load->view('employee/dashboard',$data);
+        // Load the correct employee dashboard view
+        $this->load->view('employee/dashboard', $data);
     }
 }

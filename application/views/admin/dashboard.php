@@ -2,24 +2,109 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+      body {
+        overflow-x: hidden;
+      }
+      #sidebarMenu {
+        width: 240px;
+        min-height: 100vh;
+        transition: transform .3s ease-in-out;
+      }
+      #page-content {
+        flex-grow: 1;
+      }
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1020;
+        display: none;
+      }
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      .menu-toggle {
+        position: fixed;
+        top: 10px;
+        right: 25px;
+        z-index: 1040;
+        display: none;
+      }
+      @media (max-width: 768px) {
+        #wrapper {
+          display: block !important;
+        }
+        #sidebarMenu {
+          position: fixed;
+          top: 0;
+          left: 0;
+          z-index: 1030;
+          transform: translateX(-100%);
+        }
+        #sidebarMenu.show {
+          transform: translateX(0);
+        }
+        .menu-toggle {
+          display: block;
+        }
+        #page-content {
+          width: 100%;
+          padding-top: 60px !important;
+        }
+      }
+    </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">Admin Dashboard</a>
-    <div class="d-flex">
-      <a href="<?=site_url('admin/users');?>" class="btn btn-outline-light me-2">Users</a>
-      <a href="<?=site_url('admin/questions');?>" class="btn btn-outline-light me-2">Questions</a>
-      <a href="<?=site_url('logout');?>" class="btn btn-danger">Logout</a>
+<!-- Backdrop overlay for mobile when menu is open -->
+<div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+<!-- Mobile menu toggle button -->
+<button class="btn btn-dark menu-toggle" id="menu-toggle">
+  <i class="fa-solid fa-bars" id="menu-icon"></i>
+</button>
+
+<div class="d-flex" id="wrapper">
+  <!-- Sidebar -->
+  <nav id="sidebarMenu" class="bg-dark text-white p-3">
+    <a href="#" class="d-flex align-items-center mb-3 mb-md-0 text-white text-decoration-none">
+      <span class="fs-4"><i class="fa-solid fa-chart-line me-2"></i>Admin</span>
+    </a>
+    <hr class="text-secondary" />
+    <ul class="nav nav-pills flex-column mb-auto">
+      <li class="nav-item mb-2">
+        <a href="<?=site_url('/dashboard');?>" class="nav-link text-white <?php if(current_url()==site_url('/dashboard')) echo 'active bg-primary';?>"><i class="fa-solid fa-table-columns me-2"></i>Dashboard</a>
+      </li>
+      <li class="nav-item mb-2">
+        <a href="<?=site_url('admin/users');?>" class="nav-link text-white <?php if(uri_string()==='admin/users') echo 'active bg-primary';?>"><i class="fa-solid fa-users-gear me-2"></i>Users</a>
+      </li>
+      <li class="nav-item mb-2">
+        <a href="<?=site_url('admin/questions');?>" class="nav-link text-white <?php if(uri_string()==='admin/questions') echo 'active bg-primary';?>"><i class="fa-solid fa-question me-2"></i>Questions</a>
+      </li>
+      <li class="nav-item mb-2">
+        <a href="<?=site_url('admin/performance');?>" class="nav-link text-white <?php if(uri_string()==='admin/performance') echo 'active bg-primary';?>"><i class="fa-solid fa-chart-simple me-2"></i>Performance</a>
+      </li>
+    </ul>
+    <hr class="text-secondary" />
+    <div>
+      <a href="<?=site_url('logout');?>" class="btn btn-outline-danger w-100"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a>
     </div>
-  </div>
-</nav>
-<div class="container">
-<div class="row mb-4">
+  </nav>
+  <!-- /Sidebar -->
+
+  <!-- Page content -->
+  <div id="page-content" class="p-4">
+<div class="">
+<div class="row g-2 mb-4">
         <div class="col-md-4">
             <div class="card text-bg-primary">
                 <div class="card-body">
@@ -94,7 +179,10 @@
     <div class="table-responsive">
     <table class="table table-striped table-bordered">
         <thead class="table-dark"><tr>
-            <th>#</th><th>Submitted By</th><th>Submitter Against</th><th>Month</th><th>Action</th>
+            <th>#</th><th>Submitted By</th><th>Submitter Against</th><th>Month</th>
+            <?php foreach($questions as $q): ?>
+              <th><?=htmlspecialchars($q->text);?></th>
+            <?php endforeach; ?>
         </tr></thead>
         <tbody>
         <?php foreach($submissions as $idx=>$s): ?>
@@ -103,7 +191,28 @@
             <td><?=$s->submitter;?> (<?=$s->submitter_role == 'tl' ? 'TL' : ($s->submitter_role == 'employee' ? 'EM' : 'Admin')?>)</td>
             <td><?=$s->target;?> (<?=$s->target_role == 'tl' ? 'TL' : ($s->target_role == 'employee' ? 'EM' : 'Admin')?>)</td>
             <td><?=date('F Y', strtotime($s->yearmonth.'-01'));?></td>
-            <td><button class="btn btn-sm btn-primary view-btn" data-id="<?=$s->id;?>">View</button></td>
+            <?php
+              $CI =& get_instance();
+              // Fetch answers directly
+              $db = $CI->load->database('', true); // returns CI_DB_query_builder instance
+              $answers = $db->select('q.text, sa.rating, sa.comment')
+                            ->from('submission_answers sa')
+                            ->join('questions q','q.id = sa.question_id')
+                            ->where('sa.submission_id', $s->id)
+                            ->get()->result();
+              $answers_map = [];
+              foreach($answers as $answer){
+                  $answers_map[$answer->text] = $answer;
+              }
+              foreach($questions as $q){
+                  if(isset($answers_map[$q->text])){
+                      $a = $answers_map[$q->text];
+                      echo '<td>'.htmlspecialchars($a->rating).($a->comment ? ' ('.htmlspecialchars($a->comment).')' : '').'</td>';
+                  }else{
+                      echo '<td>-</td>';
+                  }
+              }
+            ?>
         </tr>
         <?php endforeach; ?>
         </tbody>
@@ -111,85 +220,84 @@
     </div>
 </div>
 
-<!-- Review Details Modal -->
-<div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Review Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <strong>Submitter:</strong> <span id="modal-submitter"></span>
-          </div>
-          <div class="col-md-6">
-            <strong>Submitter against:</strong> <span id="modal-target"></span>
-          </div>
-        </div>
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <strong>Month:</strong> <span id="modal-period"></span>
-          </div>
-          <div class="col-md-6">
-            <strong>Date:</strong> <span id="modal-date"></span>
-          </div>
-        </div>
-        <h6>Answers</h6>
-        <table class="table table-striped" id="answers-table">
-          <thead class="table-dark">
-            <tr><th>Question</th><th width="100">Rating</th><th>Comment</th></tr>
-          </thead>
-          <tbody>
-            <!-- Answers loaded via AJAX -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script>
-$(document).ready(function() {
-  $('.view-btn').click(function() {
-    const id = $(this).data('id');
-    
-    // Clear previous content
-    $('#answers-table tbody').empty();
-    
-    // Load submission details via AJAX
-    $.ajax({
-      url: '<?=site_url("admin/get_review_json/");?>' + id,
-      type: 'GET',
-      dataType: 'json',
-      success: function(data) {
-        // Populate modal with submission details
-        $('#modal-submitter').text(data.submission.submitter + ' (' + (data.submission.submitter_role == 'tl' ? 'TL' : data.submission.submitter_role == 'employee' ? 'EM' : 'Admin') + ')');
-        $('#modal-target').text(data.submission.target + ' (' + (data.submission.target_role == 'tl' ? 'TL' : data.submission.target_role == 'employee' ? 'EM' : 'Admin') + ')');
-        $('#modal-period').text(data.submission.yearmonth ? new Date(data.submission.yearmonth + '-01').toLocaleString('en-US', {month: 'long', year: 'numeric'}) : '');
-        $('#modal-date').text(data.submission.created_at ? new Date(data.submission.created_at).toLocaleString('en-US', {month: 'long', day: 'numeric', year: 'numeric'}) : '');
-        
-        // Add answers to table
-        data.answers.forEach(function(answer) {
-          $('#answers-table tbody').append(
-            `<tr>
-              <td>${answer.text}</td>
-              <td>${answer.rating}</td>
-              <td>${answer.comment || ''}</td>
-            </tr>`
-          );
-        });
-        
-        // Show modal
-        $('#reviewModal').modal('show');
-      },
-      error: function() {
-        alert('Error loading review details');
+document.addEventListener('DOMContentLoaded', function() {
+  // Mobile sidebar functionality
+  const menuToggle = document.getElementById('menu-toggle');
+  const sidebarMenu = document.getElementById('sidebarMenu');
+  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+  
+  // Function to close sidebar
+  function closeSidebar() {
+    if (sidebarMenu && sidebarBackdrop) {
+      sidebarMenu.classList.remove('show');
+      sidebarBackdrop.classList.remove('show');
+      document.body.style.overflow = '';
+      
+      // Change icon to bars
+      const menuIcon = document.getElementById('menu-icon');
+      if (menuIcon) {
+        menuIcon.classList.remove('fa-xmark');
+        menuIcon.classList.add('fa-bars');
+      }
+    }
+  }
+  
+  // Function to open sidebar
+  function openSidebar() {
+    if (sidebarMenu && sidebarBackdrop) {
+      sidebarMenu.classList.add('show');
+      sidebarBackdrop.classList.add('show');
+      document.body.style.overflow = 'hidden'; // Prevent body scrolling when sidebar is open
+      
+      // Change icon to X (close)
+      const menuIcon = document.getElementById('menu-icon');
+      if (menuIcon) {
+        menuIcon.classList.remove('fa-bars');
+        menuIcon.classList.add('fa-xmark');
+      }
+    }
+  }
+  
+  // Toggle sidebar when menu button is clicked
+  if (menuToggle) {
+    menuToggle.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (sidebarMenu.classList.contains('show')) {
+        closeSidebar();
+      } else {
+        openSidebar();
       }
     });
+  }
+  
+  // Close sidebar when backdrop is clicked
+  if (sidebarBackdrop) {
+    sidebarBackdrop.addEventListener('click', closeSidebar);
+  }
+  
+  // Close sidebar when links are clicked (on mobile)
+  if (sidebarMenu) {
+    const navLinks = sidebarMenu.querySelectorAll('.nav-link, .btn');
+    navLinks.forEach(function(link) {
+      link.addEventListener('click', function() {
+        if (window.innerWidth <= 768) {
+          closeSidebar();
+        }
+      });
+    });
+  }
+  
+  // Close sidebar when resizing to desktop
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 768 && sidebarMenu && sidebarMenu.classList.contains('show')) {
+      closeSidebar();
+    }
   });
 });
 </script>
+</div>
+</div>
 </body>
-</html> 
+</html>
+

@@ -65,4 +65,17 @@ class User_model extends CI_Model
         $this->db->insert($this->table, $data);
         return $this->db->insert_id();
     }
+
+    public function update($id, $data)
+    {
+        // Filter valid fields to update
+        $validFields = ['name', 'email', 'tl_id', 'role_id'];
+        $updateData = array_intersect_key($data, array_flip($validFields));
+        
+        // Only proceed if we have valid data to update
+        if (!empty($updateData)) {
+            return $this->db->update('users', $updateData, ['id' => $id]);
+        }
+        return false;
+    }
 }

@@ -1,51 +1,483 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Users</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="p-4">
-<a href="<?=site_url('dashboard');?>" class="btn btn-secondary mb-3">← Back</a>
-<h4>Create New User</h4>
-<form method="post" class="row g-3 mb-4">
-    <div class="col-md-4"><input class="form-control" name="name" placeholder="Full name" required></div>
-    <div class="col-md-4"><input type="email" class="form-control" name="email" placeholder="Email" required></div>
-    <div class="col-md-2"><input type="password" class="form-control" name="password" placeholder="Password" required></div>
-    <div class="col-md-2">
-        <select name="role_id" class="form-select" required>
-            <option value="2">Team Lead</option>
-            <option value="3">Employee</option>
-        </select>
-    </div>
-    <div class="col-md-3">
-        <select name="tl_id" class="form-select">
-            <option value="">Assign TL (for employee)</option>
-            <?php foreach($tls as $tl): ?>
-                <option value="<?=$tl->id;?>"><?=$tl->name;?></option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-    <div class="col-md-2"><button class="btn btn-primary w-100">Add User</button></div>
-</form>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            overflow-x: hidden;
+        }
 
-<div class="table-responsive">
-<table class="table table-bordered table-striped">
-<thead class="table-dark"><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Team Lead</th></tr></thead>
-<tbody>
-<?php foreach(array_merge($tls,$employees) as $idx=>$u): ?>
-<tr>
-  <td><?=($idx+1);?></td>
-  <td><?=$u->name;?></td>
-  <td><?=$u->email;?></td>
-  <td><?=$u->role_id==2?'TL':'Employee';?></td>
-  <td><?php if($u->tl_id){
-      foreach($tls as $t) if($t->id==$u->tl_id) echo $t->name;
-  } ?></td>
-</tr>
-<?php endforeach; ?>
-</tbody>
-</table>
-</div>
+        #sidebarMenu {
+            width: 240px;
+            min-height: 100vh;
+            transition: transform .3s ease-in-out;
+        }
+
+        #page-content {
+            flex-grow: 1;
+        }
+
+        .sidebar-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1020;
+            display: none;
+        }
+
+        .sidebar-backdrop.show { display: block; }
+
+        .menu-toggle {
+            position: fixed;
+            top: 10px;
+            right: 25px;
+            z-index: 1040;
+            display: none;
+        }
+
+        /* Editable fields styling */
+        .editable {
+            position: relative;
+        }
+        
+        .user-row.editing {
+            background-color: #fff3cd !important;
+        }
+        
+        .editable input, 
+        .editable select {
+            width: 100%;
+            padding: 0.25rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+        }
+        
+        .success-indicator {
+            color: #198754;
+            margin-left: 0.5rem;
+        }
+
+        @media(max-width:768px) {
+            #sidebarMenu {
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 1030;
+                transform: translateX(-100%);
+            }
+
+            #sidebarMenu.show { transform: translateX(0); }
+
+            .menu-toggle { display: block; }
+
+            #page-content {
+                width: 100%;
+                padding-top: 60px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Backdrop overlay for mobile when menu is open -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- Mobile menu toggle button -->
+    <button class="btn btn-dark menu-toggle" id="menu-toggle">
+        <i class="fa-solid fa-bars" id="menu-icon"></i>
+    </button>
+
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebarMenu" class="bg-dark text-white p-3">
+            <a href="#" class="d-flex align-items-center mb-3 text-white text-decoration-none">
+                <span class="fs-4"><i class="fa-solid fa-chart-line me-2"></i>Admin</span>
+            </a>
+            <hr class="text-secondary" />
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item mb-2"><a href="<?= site_url('/dashboard'); ?>" class="nav-link text-white"><i class="fa-solid fa-table-columns me-2"></i>Dashboard</a></li>
+                <li class="nav-item mb-2"><a href="<?= site_url('admin/users'); ?>" class="nav-link text-white active bg-primary"><i class="fa-solid fa-users-gear me-2"></i>Users</a></li>
+                <li class="nav-item mb-2"><a href="<?= site_url('admin/questions'); ?>" class="nav-link text-white"><i class="fa-solid fa-question me-2"></i>Questions</a></li>
+                <li class="nav-item mb-2"><a href="<?= site_url('admin/performance'); ?>" class="nav-link text-white <?php if(uri_string()==='admin/performance') echo 'active bg-primary';?>"><i class="fa-solid fa-chart-simple me-2"></i>Performance</a></li>
+            </ul>
+            <hr class="text-secondary" />
+            <a href="<?= site_url('logout'); ?>" class="btn btn-outline-danger w-100"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a>
+        </nav>
+        <!-- /Sidebar -->
+
+        <!-- Page content -->
+        <div id="page-content" class="p-4">
+
+            <h4>Create New User</h4>
+            <form method="post" class="row g-3 mb-4">
+                <div class="col-md-4"><input class="form-control" name="name" placeholder="Full name" required></div>
+                <div class="col-md-4"><input type="email" class="form-control" name="email" placeholder="Email" required></div>
+                <div class="col-md-2"><input type="password" class="form-control" name="password" placeholder="Password" required></div>
+                <div class="col-md-2">
+                    <select name="role_id" class="form-select" required>
+                        <option value="2">Team Lead</option>
+                        <option value="3">Employee</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="tl_id" class="form-select">
+                        <option value="">Assign TL (for employee)</option>
+                        <?php foreach ($tls as $tl): ?>
+                            <option value="<?= $tl->id; ?>"><?= $tl->name; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-2"><button class="btn btn-primary w-100">Add User</button></div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Team Lead</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach (array_merge($tls, $employees) as $idx => $u): ?>
+                            <tr class="user-row" data-id="<?= $u->id; ?>" data-role="<?= $u->role_id; ?>" data-tl="<?= $u->tl_id ?: ''; ?>">
+                                <td><?= ($idx + 1); ?></td>
+                                <td class="editable editable-name" data-field="name"><?= $u->name; ?></td>
+                                <td class="editable editable-email" data-field="email"><?= $u->email; ?></td>
+                                <td class="editable editable-role" data-field="role_id"><?= $u->role_id == 2 ? 'TL' : 'Employee'; ?></td>
+                                <td class="editable editable-tl" data-field="tl_id"><?php if ($u->tl_id) {
+                                        foreach ($tls as $t) if ($t->id == $u->tl_id) echo $t->name;
+                                    } else { echo '-'; } ?></td>
+                                <td>
+                                    <div class="edit-controls d-none">
+                                        <button class="btn btn-sm btn-success save-user-btn"><i class="fa-solid fa-check"></i> Save</button>
+                                        <button class="btn btn-sm btn-secondary cancel-edit-btn ms-1"><i class="fa-solid fa-times"></i> Cancel</button>
+                                    </div>
+                                    <button class="btn btn-sm btn-primary edit-user-btn"><i class="fa-solid fa-pen"></i> Edit</button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebarMenu = document.getElementById('sidebarMenu');
+        const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+
+        function closeSidebar() {
+            if (sidebarMenu && sidebarBackdrop) {
+                sidebarMenu.classList.remove('show');
+                sidebarBackdrop.classList.remove('show');
+                document.body.style.overflow = '';
+
+                const menuIcon = document.getElementById('menu-icon');
+                if (menuIcon) {
+                    menuIcon.classList.remove('fa-xmark');
+                    menuIcon.classList.add('fa-bars');
+                }
+            }
+        }
+
+        function openSidebar() {
+            if (sidebarMenu && sidebarBackdrop) {
+                sidebarMenu.classList.add('show');
+                sidebarBackdrop.classList.add('show');
+                document.body.style.overflow = 'hidden';
+
+                const menuIcon = document.getElementById('menu-icon');
+                if (menuIcon) {
+                    menuIcon.classList.remove('fa-bars');
+                    menuIcon.classList.add('fa-xmark');
+                }
+            }
+        }
+
+        if (menuToggle) {
+            menuToggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (sidebarMenu.classList.contains('show')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            });
+        }
+
+        if (sidebarBackdrop) {
+            sidebarBackdrop.addEventListener('click', closeSidebar);
+        }
+
+        if (sidebarMenu) {
+            const navLinks = sidebarMenu.querySelectorAll('.nav-link, .btn');
+            navLinks.forEach(function (link) {
+                link.addEventListener('click', function () {
+                    if (window.innerWidth <= 768) {
+                        closeSidebar();
+                    }
+                });
+            });
+        }
+
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 768 && sidebarMenu && sidebarMenu.classList.contains('show')) {
+                closeSidebar();
+            }
+        });
+    });
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cache TL data for select dropdown
+        const tlOptions = [
+            { id: '', name: 'None' },
+            <?php foreach($tls as $tl): ?>
+            { id: '<?=$tl->id;?>', name: '<?=htmlspecialchars($tl->name);?>' },
+            <?php endforeach; ?>
+        ];
+        
+        // Edit button click handler
+        document.querySelectorAll('.edit-user-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                
+                // If already editing, do nothing
+                if (row.classList.contains('editing')) return;
+                
+                // Store original values
+                const editableCells = row.querySelectorAll('.editable');
+                editableCells.forEach(cell => {
+                    cell.dataset.original = cell.textContent.trim();
+                });
+                
+                // Enter edit mode
+                row.classList.add('editing');
+                
+                // Hide edit button, show save/cancel buttons
+                this.classList.add('d-none');
+                row.querySelector('.edit-controls').classList.remove('d-none');
+                
+                // Make cells editable
+                makeEditable(row);
+            });
+        });
+        
+        // Save button click handler
+        document.querySelectorAll('.save-user-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                saveUserChanges(row);
+            });
+        });
+        
+        // Cancel button click handler
+        document.querySelectorAll('.cancel-edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                cancelEdit(row);
+            });
+        });
+        
+        // Role dropdown change handler
+        function handleRoleChange(select) {
+            select.addEventListener('change', function() {
+                const row = this.closest('tr');
+                const tlCell = row.querySelector('.editable-tl');
+                const roleValue = this.value;
+                
+                // If changed to TL, clear TL assignment
+                if (roleValue === '2') {
+                    if (tlCell.querySelector('select')) {
+                        tlCell.querySelector('select').value = '';
+                        tlCell.querySelector('select').disabled = true;
+                    }
+                } else {
+                    // If changed to Employee, enable TL dropdown
+                    if (tlCell.querySelector('select')) {
+                        tlCell.querySelector('select').disabled = false;
+                    }
+                }
+            });
+        }
+        
+        // Function to make cells editable
+        function makeEditable(row) {
+            const userId = row.dataset.id;
+            const currentRole = row.dataset.role;
+            const currentTl = row.dataset.tl;
+            
+            // Name field
+            const nameCell = row.querySelector('.editable-name');
+            const nameValue = nameCell.textContent.trim();
+            nameCell.innerHTML = `<input type="text" name="name" value="${nameValue}" required>`;
+            
+            // Email field
+            const emailCell = row.querySelector('.editable-email');
+            const emailValue = emailCell.textContent.trim();
+            emailCell.innerHTML = `<input type="email" name="email" value="${emailValue}" required>`;
+            
+            // Role field
+            const roleCell = row.querySelector('.editable-role');
+            const roleValue = currentRole;
+            roleCell.innerHTML = `
+                <select name="role_id">
+                    <option value="2" ${roleValue === '2' ? 'selected' : ''}>TL</option>
+                    <option value="3" ${roleValue === '3' ? 'selected' : ''}>Employee</option>
+                </select>
+            `;
+            
+            // Add role change handler
+            const roleSelect = roleCell.querySelector('select');
+            handleRoleChange(roleSelect);
+            
+            // Team Lead field
+            const tlCell = row.querySelector('.editable-tl');
+            const tlValue = currentTl;
+            
+            // Only employees can have TLs
+            const isTL = roleValue === '2';
+            
+            let tlSelectHtml = `<select name="tl_id" ${isTL ? 'disabled' : ''}>`;
+            tlOptions.forEach(option => {
+                tlSelectHtml += `<option value="${option.id}" ${tlValue === option.id ? 'selected' : ''}>${option.name}</option>`;
+            });
+            tlSelectHtml += `</select>`;
+            
+            tlCell.innerHTML = tlSelectHtml;
+        }
+        
+        // Function to save changes
+        function saveUserChanges(row) {
+            const userId = row.dataset.id;
+            
+            // Collect form data
+            const nameInput = row.querySelector('[name="name"]');
+            const emailInput = row.querySelector('[name="email"]');
+            const roleSelect = row.querySelector('[name="role_id"]');
+            const tlSelect = row.querySelector('[name="tl_id"]');
+            
+            // Validate inputs
+            if (!nameInput.value.trim()) {
+                alert('Name cannot be empty');
+                nameInput.focus();
+                return;
+            }
+            
+            if (!emailInput.value.trim() || !emailInput.value.includes('@')) {
+                alert('Please enter a valid email');
+                emailInput.focus();
+                return;
+            }
+            
+            // Prepare data for submission
+            const userData = {
+                id: userId,
+                name: nameInput.value.trim(),
+                email: emailInput.value.trim(),
+                role_id: roleSelect.value
+            };
+            
+            // For employees, include TL ID
+            if (roleSelect.value === '3' && tlSelect && !tlSelect.disabled) {
+                userData.tl_id = tlSelect.value;
+            } else if (roleSelect.value === '2') {
+                // For TLs, clear TL ID
+                userData.tl_id = '';
+            }
+            
+            // AJAX request to update user
+            fetch('<?=site_url('admin/update_user');?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: Object.entries(userData)
+                    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+                    .join('&')
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update row with new values
+                    row.querySelector('.editable-name').textContent = userData.name;
+                    row.querySelector('.editable-email').textContent = userData.email;
+                    row.querySelector('.editable-role').textContent = data.role_name || (userData.role_id === '2' ? 'TL' : 'Employee');
+                    
+                    // Update TL cell
+                    const tlCell = row.querySelector('.editable-tl');
+                    if (userData.role_id === '2') {
+                        tlCell.textContent = '-';
+                    } else if (userData.tl_id) {
+                        tlCell.textContent = data.tl_name || tlSelect.options[tlSelect.selectedIndex].text;
+                    } else {
+                        tlCell.textContent = '-';
+                    }
+                    
+                    // Update row's data attributes
+                    row.dataset.role = userData.role_id;
+                    row.dataset.tl = userData.tl_id || '';
+                    
+                    // Exit edit mode
+                    row.classList.remove('editing');
+                    row.querySelector('.edit-controls').classList.add('d-none');
+                    row.querySelector('.edit-user-btn').classList.remove('d-none');
+                    
+                    // Show success indicator
+                    const successIndicator = document.createElement('span');
+                    successIndicator.className = 'success-indicator';
+                    successIndicator.innerHTML = '<i class="fa-solid fa-check"></i> Updated';
+                    row.querySelector('.editable-name').appendChild(successIndicator);
+                    
+                    // Remove indicator after delay
+                    setTimeout(() => {
+                        successIndicator.remove();
+                    }, 3000);
+                } else {
+                    alert('Failed to update user: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error updating user:', error);
+                alert('An error occurred while updating the user');
+            });
+        }
+        
+        // Function to cancel editing
+        function cancelEdit(row) {
+            // Restore original values
+            const editableCells = row.querySelectorAll('.editable');
+            editableCells.forEach(cell => {
+                cell.textContent = cell.dataset.original || '';
+                delete cell.dataset.original;
+            });
+            
+            // Exit edit mode
+            row.classList.remove('editing');
+            row.querySelector('.edit-controls').classList.add('d-none');
+            row.querySelector('.edit-user-btn').classList.remove('d-none');
+        }
+    });
+    </script>
 </body>
-</html> 
+
+</html>

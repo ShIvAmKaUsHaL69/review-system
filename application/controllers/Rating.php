@@ -68,7 +68,28 @@ class Rating extends MY_Controller
         }
 
         // GET – render form
-        $role_for_questions = $this->user->role_name === 'tl' ? 2 : 3;
+        // Determine which form to show based on who is being rated
+        $role_for_questions = 2; // default: TL rating employee
+        
+        if ($this->user->role_name === 'employee') {
+            // If the target is selected, check if it's the TL or another employee
+            if ($data_preselect_target) {
+                $target_user = $this->User_model->find($data_preselect_target);
+                if ($target_user) {
+                    if ($target_user->id == $this->user->tl_id) {
+                        // Employee rating TL
+                        $role_for_questions = 3;
+                    } else {
+                        // Employee rating another employee
+                        $role_for_questions = 4; // New role ID for employee-to-employee questions
+                    }
+                }
+            } else {
+                // Default to employee rating TL if no target is selected
+                $role_for_questions = 3;
+            }
+        }
+        
         $data['questions']  = $this->Question_model->get_by_role($role_for_questions);
         $data['targets']    = $targets;
         $data['preselect']  = $data_preselect_target;
