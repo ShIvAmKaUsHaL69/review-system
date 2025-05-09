@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
       body{overflow-x:hidden;}
-      #sidebarMenu{width:240px;min-height:100vh;transition:transform .3s ease-in-out;}
+      #sidebarMenu{min-width:240px;min-height:100vh;transition:transform .3s ease-in-out;}
       #page-content{flex-grow:1;}
 
       /* Sidebar backdrop */
@@ -52,7 +52,6 @@
         #sidebarMenu{position:fixed;top:0;left:0;z-index:1030;transform:translateX(-100%);}
         #sidebarMenu.show{transform:translateX(0);}
         .menu-toggle{display:block;}
-        #page-content{width:100%;padding-top:60px !important;}
       }
     </style>
 </head>
@@ -74,7 +73,8 @@
       <li class="nav-item mb-2"><a href="<?=site_url('/dashboard');?>" class="nav-link text-white"><i class="fa-solid fa-table-columns me-2"></i>Dashboard</a></li>
       <li class="nav-item mb-2"><a href="<?=site_url('admin/users');?>" class="nav-link text-white"><i class="fa-solid fa-users-gear me-2"></i>Users</a></li>
       <li class="nav-item mb-2"><a href="<?=site_url('admin/questions');?>" class="nav-link text-white active bg-primary"><i class="fa-solid fa-question me-2"></i>Questions</a></li>
-      <li class="nav-item mb-2"><a href="<?=site_url('admin/performance');?>" class="nav-link text-white <?php if(uri_string()==='admin/performance') echo 'active bg-primary';?>"><i class="fa-solid fa-chart-simple me-2"></i>Performance</a></li>
+      <li class="nav-item mb-2"><a href="<?=site_url('admin/performance');?>" class="nav-link text-white <?php if(uri_string()==='admin/performance') echo 'active bg-primary';?>"><i class="fa-solid fa-chart-simple me-2"></i>Team Performance</a></li>
+      <li class="nav-item mb-2"><a href="<?=site_url('admin/charts');?>" class="nav-link text-white <?php if(uri_string()==='admin/charts') echo 'active bg-primary';?>"><i class="fa-solid fa-border-all me-2"></i>Rating Charts</a></li>
     </ul>
     <hr class="text-secondary" />
     <a href="<?=site_url('logout'); ?>" class="btn btn-outline-danger w-100"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a>

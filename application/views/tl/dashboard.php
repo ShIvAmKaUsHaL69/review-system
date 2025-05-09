@@ -16,7 +16,7 @@
 
     .menu-toggle{position:fixed;top:10px;right:25px;z-index:1040;display:none;}
 
-    @media(max-width:768px){#sidebarMenu{position:fixed;top:0;left:0;z-index:1030;transform:translateX(-100%);}#sidebarMenu.show{transform:translateX(0);} .menu-toggle{display:block;} #page-content{width:100%;padding-top:60px !important;} }
+    @media(max-width:768px){#sidebarMenu{position:fixed;top:0;left:0;z-index:1030;transform:translateX(-100%);}#sidebarMenu.show{transform:translateX(0);} .menu-toggle{display:block;} }
   </style>
 </head>
 <body>

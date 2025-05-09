@@ -82,4 +82,5 @@ class Dashboard extends MY_Controller
         // Load the correct employee dashboard view
         $this->load->view('employee/dashboard', $data);
     }
+    
 }

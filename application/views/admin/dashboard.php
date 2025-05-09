@@ -13,7 +13,7 @@
         overflow-x: hidden;
       }
       #sidebarMenu {
-        width: 240px;
+        min-width: 240px;
         min-height: 100vh;
         transition: transform .3s ease-in-out;
       }
@@ -57,10 +57,6 @@
         .menu-toggle {
           display: block;
         }
-        #page-content {
-          width: 100%;
-          padding-top: 60px !important;
-        }
       }
     </style>
 </head>
@@ -91,7 +87,10 @@
         <a href="<?=site_url('admin/questions');?>" class="nav-link text-white <?php if(uri_string()==='admin/questions') echo 'active bg-primary';?>"><i class="fa-solid fa-question me-2"></i>Questions</a>
       </li>
       <li class="nav-item mb-2">
-        <a href="<?=site_url('admin/performance');?>" class="nav-link text-white <?php if(uri_string()==='admin/performance') echo 'active bg-primary';?>"><i class="fa-solid fa-chart-simple me-2"></i>Performance</a>
+        <a href="<?=site_url('admin/performance');?>" class="nav-link text-white <?php if(uri_string()==='admin/performance') echo 'active bg-primary';?>"><i class="fa-solid fa-chart-simple me-2"></i>Team Performance</a>
+      </li>
+      <li class="nav-item mb-2">
+        <a href="<?=site_url('admin/charts');?>" class="nav-link text-white <?php if(uri_string()==='admin/charts') echo 'active bg-primary';?>"><i class="fa-solid fa-border-all me-2"></i>Rating Charts</a>
       </li>
     </ul>
     <hr class="text-secondary" />
@@ -103,6 +102,7 @@
 
   <!-- Page content -->
   <div id="page-content" class="p-4">
+      <h4>Admin Dashboard</h4>
 <div class="">
 <div class="row g-2 mb-4">
         <div class="col-md-4">
@@ -207,7 +207,7 @@
               foreach($questions as $q){
                   if(isset($answers_map[$q->text])){
                       $a = $answers_map[$q->text];
-                      echo '<td>'.htmlspecialchars($a->rating).($a->comment ? ' ('.htmlspecialchars($a->comment).')' : '').'</td>';
+                      echo '<td><b>'.htmlspecialchars($a->rating).($a->comment ? '</b> ('.htmlspecialchars($a->comment).')' : '</b>').'</td>';
                   }else{
                       echo '<td>-</td>';
                   }

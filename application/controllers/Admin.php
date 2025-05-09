@@ -230,4 +230,80 @@ class Admin extends MY_Controller
             $this->output->set_output(json_encode(['error' => 'Failed to update user']));
         }
     }
+
+    public function charts()
+    {
+        // Load required models
+        $this->load->model(['Submission_model','Question_model']);
+
+        // Fetch filter values (GET)
+        $target_id        = $this->input->get('target_id');
+        $start_period_id  = $this->input->get('start_period');
+        $end_period_id    = $this->input->get('end_period');
+
+        // Data for dropdowns
+        // All TL + Employees in one list for easy selection
+        $data['users']    = $this->db->select('id,name,role_id')->from('users')->order_by('name','ASC')->get()->result();
+        $data['periods']  = $this->Submission_model->get_all_periods();
+
+        $data['target_id']       = $target_id;
+        $data['start_period_id'] = $start_period_id;
+        $data['end_period_id']   = $end_period_id;
+
+        $data['charts'] = [];
+        $data['months_range'] = [];
+
+        // Only build charts if all filters are present
+        if ($target_id && $start_period_id && $end_period_id) {
+            // Resolve start / end yearmonth strings for easier comparison
+            $start_period = $this->db->get_where('periods',['id'=>$start_period_id])->row();
+            $end_period   = $this->db->get_where('periods',['id'=>$end_period_id])->row();
+            if($start_period && $end_period) {
+                $startYM = $start_period->yearmonth;
+                $endYM   = $end_period->yearmonth;
+
+                // Generate list of months between start and end inclusive
+                $months = [];
+                $d = new DateTime($startYM.'-01');
+                $endD = new DateTime($endYM.'-01');
+                while ($d <= $endD) {
+                    $months[] = $d->format('Y-m');
+                    $d->modify('+1 month');
+                }
+                $data['months_range'] = $months;
+
+                // Build query to fetch answers within range for target user
+                $rows = $this->db->select('s.submitter_id, u.name AS submitter_name, r.role_name AS submitter_role, p.yearmonth, q.text AS question, sa.rating')
+                                  ->from('submissions s')
+                                  ->join('submission_answers sa','sa.submission_id = s.id')
+                                  ->join('questions q','q.id = sa.question_id')
+                                  ->join('periods p','p.id = s.period_id')
+                                  ->join('users u','u.id = s.submitter_id')
+                                  ->join('roles r','r.id = u.role_id')
+                                  ->where('s.target_id', $target_id)
+                                  ->where('p.yearmonth >=', $startYM)
+                                  ->where('p.yearmonth <=', $endYM)
+                                  ->order_by('u.role_id','ASC') // TL first
+                                  ->order_by('u.name','ASC')
+                                  ->order_by('p.yearmonth','ASC')
+                                  ->get()->result();
+
+                // Organise rows per submitter
+                $chartData = [];
+                foreach ($rows as $row) {
+                    if(!isset($chartData[$row->submitter_id])) {
+                        $chartData[$row->submitter_id] = [
+                            'submitter_name' => $row->submitter_name,
+                            'submitter_role' => $row->submitter_role,
+                            'ratings'        => [] // [question][yearmonth] => rating
+                        ];
+                    }
+                    $chartData[$row->submitter_id]['ratings'][$row->question][$row->yearmonth] = $row->rating;
+                }
+                $data['charts'] = $chartData;
+            }
+        }
+
+        $this->load->view('admin/charts', $data);
+    }
 }

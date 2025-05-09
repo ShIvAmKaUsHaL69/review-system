@@ -3,19 +3,19 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Performance Overview</title>
+    <title>Team Performance</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
       body{overflow-x:hidden;}
-      #sidebarMenu{width:240px;min-height:100vh;transition:transform .3s ease-in-out;}
+      #sidebarMenu{min-width:240px;min-height:100vh;transition:transform .3s ease-in-out;}
       #page-content{flex-grow:1;}
       .sidebar-backdrop{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1020;display:none;}
       .sidebar-backdrop.show{display:block;}
       .menu-toggle{position:fixed;top:10px;right:25px;z-index:1040;display:none;}
-      @media(max-width:768px){#wrapper{display:block !important;}#sidebarMenu{position:fixed;top:0;left:0;z-index:1030;transform:translateX(-100%);}#sidebarMenu.show{transform:translateX(0);} .menu-toggle{display:block;}#page-content{width:100%;padding-top:60px !important;}}
+      @media(max-width:768px){#wrapper{display:block !important;}#sidebarMenu{position:fixed;top:0;left:0;z-index:1030;transform:translateX(-100%);}#sidebarMenu.show{transform:translateX(0);} .menu-toggle{display:block;}}
     </style>
 </head>
 <body>
@@ -32,7 +32,8 @@
       <li class="nav-item mb-2"><a href="<?=site_url('/dashboard');?>" class="nav-link text-white <?php if(current_url()==site_url('/dashboard')) echo 'active bg-primary';?>"><i class="fa-solid fa-table-columns me-2"></i>Dashboard</a></li>
       <li class="nav-item mb-2"><a href="<?=site_url('admin/users');?>" class="nav-link text-white <?php if(uri_string()==='admin/users') echo 'active bg-primary';?>"><i class="fa-solid fa-users-gear me-2"></i>Users</a></li>
       <li class="nav-item mb-2"><a href="<?=site_url('admin/questions');?>" class="nav-link text-white <?php if(uri_string()==='admin/questions') echo 'active bg-primary';?>"><i class="fa-solid fa-question me-2"></i>Questions</a></li>
-      <li class="nav-item mb-2"><a href="<?=site_url('admin/performance');?>" class="nav-link text-white <?php if(uri_string()==='admin/performance') echo 'active bg-primary';?>"><i class="fa-solid fa-chart-simple me-2"></i>Performance</a></li>
+      <li class="nav-item mb-2"><a href="<?=site_url('admin/performance');?>" class="nav-link text-white <?php if(uri_string()==='admin/performance') echo 'active bg-primary';?>"><i class="fa-solid fa-chart-simple me-2"></i>Team Performance</a></li>
+      <li class="nav-item mb-2"><a href="<?=site_url('admin/charts');?>" class="nav-link text-white <?php if(uri_string()==='admin/charts') echo 'active bg-primary';?>"><i class="fa-solid fa-border-all me-2"></i>Rating Charts</a></li>
     </ul>
     <hr class="text-secondary" />
     <a href="<?=site_url('logout'); ?>" class="btn btn-outline-danger w-100"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a>
@@ -42,7 +43,7 @@
   <!-- Page content -->
   <div id="page-content" class="p-4">
 
-    <h4>Performance Submissions</h4>
+    <h4>Employee Stats</h4>
     <div class="card mb-4">
       <div class="card-body">
         <form method="get" action="<?=site_url('admin/performance');?>" class="row g-3">
@@ -111,7 +112,7 @@
               foreach($questions as $q){
                 if(isset($answers_map[$q->text])){
                   $a=$answers_map[$q->text];
-                  echo '<td>'.htmlspecialchars($a->rating).($a->comment?' ('.htmlspecialchars($a->comment).')':'').'</td>';
+                  echo '<td><b>'.htmlspecialchars($a->rating).($a->comment?'</b> ('.htmlspecialchars($a->comment).')':'</b>').'</td>';
                 }else{ echo '<td>-</td>'; }
               }
             ?>

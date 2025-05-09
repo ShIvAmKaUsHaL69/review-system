@@ -13,7 +13,7 @@
         }
 
         #sidebarMenu {
-            width: 240px;
+            min-width: 240px;
             min-height: 100vh;
             transition: transform .3s ease-in-out;
         }
@@ -78,10 +78,6 @@
 
             .menu-toggle { display: block; }
 
-            #page-content {
-                width: 100%;
-                padding-top: 60px !important;
-            }
         }
     </style>
 </head>
@@ -106,7 +102,8 @@
                 <li class="nav-item mb-2"><a href="<?= site_url('/dashboard'); ?>" class="nav-link text-white"><i class="fa-solid fa-table-columns me-2"></i>Dashboard</a></li>
                 <li class="nav-item mb-2"><a href="<?= site_url('admin/users'); ?>" class="nav-link text-white active bg-primary"><i class="fa-solid fa-users-gear me-2"></i>Users</a></li>
                 <li class="nav-item mb-2"><a href="<?= site_url('admin/questions'); ?>" class="nav-link text-white"><i class="fa-solid fa-question me-2"></i>Questions</a></li>
-                <li class="nav-item mb-2"><a href="<?= site_url('admin/performance'); ?>" class="nav-link text-white <?php if(uri_string()==='admin/performance') echo 'active bg-primary';?>"><i class="fa-solid fa-chart-simple me-2"></i>Performance</a></li>
+                <li class="nav-item mb-2"><a href="<?= site_url('admin/performance'); ?>" class="nav-link text-white <?php if(uri_string()==='admin/performance') echo 'active bg-primary';?>"><i class="fa-solid fa-chart-simple me-2"></i>Team Performance</a></li>
+                <li class="nav-item mb-2"><a href="<?= site_url('admin/charts'); ?>" class="nav-link text-white <?php if(uri_string()==='admin/charts') echo 'active bg-primary';?>"><i class="fa-solid fa-border-all me-2"></i>Rating Charts</a></li>
             </ul>
             <hr class="text-secondary" />
             <a href="<?= site_url('logout'); ?>" class="btn btn-outline-danger w-100"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a>
