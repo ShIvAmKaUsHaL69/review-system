@@ -105,34 +105,47 @@
       <h4>Admin Dashboard</h4>
 <div class="">
 <div class="row g-2 mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card text-bg-primary">
                 <div class="card-body">
-                    <h5 class="card-title">Total Team Leads</h5>
-                    <p class="display-6"><?=count($tls);?></p>
+                    <h5 class="card-title">Total Team Members</h5>
+                    <p class="display-6"><?=count($employees);?></p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card text-bg-success">
                 <div class="card-body">
-                    <h5 class="card-title">Total Employees</h5>
+                    <h5 class="card-title">Total Team Leads</h5>
+                    <p class="display-6"><?=count($tls)?></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-dark">  
+                <div class="card-body">
+                    <h5 class="card-title">Total Members</h5>
                     <p class="display-6"><?=count($employees) + count($tls);?></p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card text-bg-secondary">
                 <div class="card-body">
-                    <h5 class="card-title">Total Submissions</h5>
-                    <p class="display-6"><?=count($submissions);?></p>
+                    <h5 class="card-title">Total Submissions (<?=date('F Y');?>)</h5>
+                    <p class="display-6"><?php 
+                      $current_month_submissions = array_filter($submissions, function($s) {
+                          return date('Y-m', strtotime($s->yearmonth.'-01')) === date('Y-m');
+                      });
+                      echo count($current_month_submissions);
+                    ?></p>
                 </div>
             </div>
         </div>
     </div>
 
 
-    <h4>Submissions</h4>
+    <!-- <h4>Submissions</h4>
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" action="<?=site_url('dashboard');?>" class="row g-3">
@@ -217,7 +230,42 @@
         <?php endforeach; ?>
         </tbody>
     </table>
+    </div> -->
+
+    <div class="row mb-4">
+  <div class="col-md-6 mb-3">
+    <div class="card border-success h-100">
+      <div class="card-header bg-success text-white">Outstanding Performers</div>
+      <div class="card-body">
+        <?php if(!empty($outstanding)): ?>
+          <ul class="list-unstyled mb-0">
+            <?php foreach($outstanding as $o): ?>
+              <li><i class="fa-solid fa-star text-warning me-2"></i><?=htmlspecialchars($o->name);?></li>
+            <?php endforeach; ?>
+          </ul>
+        <?php else: ?>
+          <p class="mb-0 text-muted">No outstanding reviews this month.</p>
+        <?php endif; ?>
+      </div>
     </div>
+  </div>
+  <div class="col-md-6 mb-3">
+    <div class="card border-danger h-100">
+      <div class="card-header bg-danger text-white">Needs Improvement</div>
+      <div class="card-body">
+        <?php if(!empty($low_performers)): ?>
+          <ul class="list-unstyled mb-0">
+            <?php foreach($low_performers as $lp): ?>
+              <li><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i><?=htmlspecialchars($lp->name);?></li>
+            <?php endforeach; ?>
+          </ul>
+        <?php else: ?>
+          <p class="mb-0 text-muted">No low ratings this month.</p>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+</div>   
 </div>
 
 <script>

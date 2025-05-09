@@ -52,37 +52,77 @@
   <!-- Page content -->
   <div id="page-content" class="p-4">
 
-<h4>My Team Lead</h4>
-<?php if($tl): ?>
-<div class="card mb-4">
-  <div class="card-body">
-    <h5 class="card-title"><?=$tl->name;?></h5>
-    <p class="card-text">Email: <?=$tl->email;?></p>
-    <a href="<?=site_url('submit-rating?target_id='.$tl->id);?>" class="btn btn-success">Rate TL</a>
+<div class="row mb-4">
+  <!-- Team Lead Card -->
+  <div class="col-md-6">
+    <div class="card h-100 border-primary">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fa-solid fa-user-tie me-2"></i>My Team Lead</h5>
+      </div>
+      <div class="card-body">
+        <?php if($tl): ?>
+          <h5 class="card-title"><?=$tl->name;?></h5>
+          <p class="card-text"><i class="fa-solid fa-envelope me-2"></i><?=$tl->email;?></p>
+          <?php 
+          $CI = get_instance(); 
+          $submission_model = $CI->Submission_model;
+          $can_rate_tl = $submission_model->can_submit_current($auth_user->id, $tl->id);
+          ?>
+          <?php if($can_rate_tl): ?>
+          <a href="<?=site_url('submit-rating?target_id='.$tl->id);?>" class="btn btn-success"><i class="fa-solid fa-star me-2"></i>Rate TL</a>
+          <?php else: ?>
+          <p class="text-muted">You have already rated your TL for this month.</p>
+          <?php endif; ?>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Team Members Count Card -->
+  <div class="col-md-6">
+    <div class="card h-100 border-info">
+      <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fa-solid fa-users me-2"></i>Team Overview</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-flex justify-content-center align-items-center h-100">
+          <div class="text-center">
+            <h1 class="display-4"><?=count($fellow_employees);?></h1>
+            <p class="lead">Team Members</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
-<?php endif; ?>
 
-<h4>Fellow Employees</h4>
+<h4><i class="fa-solid fa-user-group me-2"></i>Fellow Employees</h4>
 <div class="table-responsive">
 <table class="table table-bordered table-striped">
 <thead class="table-dark"><tr><th>#</th><th>Name</th><th>Email</th><th>Action</th></tr></thead>
 <tbody>
-<?php foreach($fellow_employees as $idx=>$emp): ?>
 <?php 
-$CI = get_instance(); 
-/** @var Submission_model $submission_model */
-$submission_model = $CI->Submission_model;
-$can = $submission_model->can_submit_current($auth_user->id, $emp->id); 
+$count = 1;
+foreach($fellow_employees as $idx=>$emp): 
+  // Skip if this is the currently logged in user
+  if($emp->id == $auth_user->id) continue;
 ?>
 <tr>
-  <td><?=($idx+1);?></td>
+  <td><?=$count++;?></td>
   <td><?=$emp->name;?></td>
   <td><?=$emp->email;?></td>
   <td>
-  <?php if($can): ?>
-  <a class="btn btn-sm btn-success" href="<?=site_url('submit-rating?target_id='.$emp->id);?>">Rate</a>
-  <?php else: ?><?php endif; ?></td>
+  <?php 
+  $CI = get_instance(); 
+  $submission_model = $CI->Submission_model;
+  $can_rate = $submission_model->can_submit_current($auth_user->id, $emp->id);
+  ?>
+  <?php if($can_rate): ?>
+  <a class="btn btn-sm btn-success" href="<?=site_url('submit-rating?target_id='.$emp->id);?>"><i class="fa-solid fa-star me-1"></i>Rate</a>
+  <?php else: ?>
+  <span class="badge bg-secondary">Already Rated</span>
+  <?php endif; ?>
+  </td>
 </tr>
 <?php endforeach; ?>
 </tbody>

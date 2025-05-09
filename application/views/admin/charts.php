@@ -66,32 +66,92 @@
         <form method="get" action="<?=site_url('admin/charts');?>" class="row g-3">
           <div class="col-md-4">
             <label class="form-label">Select Employee / TL</label>
-            <select name="target_id" class="form-select" required>
-              <option value="">Choose...</option>
-              <?php foreach($users as $u): ?>
-                <option value="<?=$u->id;?>" <?=($target_id==$u->id?'selected':'')?> ><?=$u->name;?> (<?=$u->role_id==2?'TL':'Emp';?>)</option>
-              <?php endforeach; ?>
-            </select>
+            <div class="dropdown custom-select-dropdown">
+              <input type="hidden" name="target_id" id="selected-user-id" value="<?=$target_id;?>" required>
+              <button class=" btn-outline-secondary dropdown-toggle form-control text-start" type="button" id="user-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <?php 
+                  $selected_name = "Choose...";
+                  foreach($users as $u) {
+                    if($target_id == $u->id) {
+                      $selected_name = $u->name . ' (' . ($u->role_id==2?'TL':'TM') . ')';
+                      break;
+                    }
+                  }
+                  echo htmlspecialchars($selected_name);
+                ?>
+              </button>
+              <div class="dropdown-menu w-100 p-0" aria-labelledby="user-dropdown">
+                <div class="p-2">
+                  <input type="text" id="user-search" class="form-control" placeholder="Search employees/TLs...">
+                </div>
+                <div class="dropdown-divider m-0"></div>
+                <div class="user-options-container" style="max-height:200px;overflow-y:auto;">
+                  <?php foreach($users as $u): ?>
+                    <button class="dropdown-item" type="button" data-id="<?=$u->id;?>"><?=$u->name;?> (<?=$u->role_id==2?'TL':'TM';?>)</button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="col-md-3">
             <label class="form-label">Start Month</label>
-            <select name="start_period" class="form-select" required>
-              <option value="">Start</option>
-              <?php foreach($periods as $p): ?>
-              <option value="<?=$p->id;?>" <?=($start_period_id==$p->id?'selected':'')?> ><?=date('F Y', strtotime($p->yearmonth.'-01'));?></option>
-              <?php endforeach; ?>
-            </select>
+            <div class="dropdown custom-select-dropdown">
+              <input type="hidden" name="start_period" id="selected-start-period" value="<?=$start_period_id;?>" required>
+              <button class=" btn-outline-secondary dropdown-toggle form-control text-start" type="button" id="start-period-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <?php 
+                  $selected_start_month = "Start";
+                  foreach($periods as $p) {
+                    if($start_period_id == $p->id) {
+                      $selected_start_month = date('F Y', strtotime($p->yearmonth.'-01'));
+                      break;
+                    }
+                  }
+                  echo htmlspecialchars($selected_start_month);
+                ?>
+              </button>
+              <div class="dropdown-menu w-100 p-0" aria-labelledby="start-period-dropdown">
+                <div class="p-2">
+                  <input type="text" class="form-control period-search" placeholder="Search months...">
+                </div>
+                <div class="dropdown-divider m-0"></div>
+                <div class="period-options-container" style="max-height:200px;overflow-y:auto;">
+                  <?php foreach($periods as $p): ?>
+                    <button class="dropdown-item" type="button" data-id="<?=$p->id;?>"><?=date('F Y', strtotime($p->yearmonth.'-01'));?></button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="col-md-3">
             <label class="form-label">End Month</label>
-            <select name="end_period" class="form-select" required>
-              <option value="">End</option>
-              <?php foreach($periods as $p): ?>
-              <option value="<?=$p->id;?>" <?=($end_period_id==$p->id?'selected':'')?> ><?=date('F Y', strtotime($p->yearmonth.'-01'));?></option>
-              <?php endforeach; ?>
-            </select>
+            <div class="dropdown custom-select-dropdown">
+              <input type="hidden" name="end_period" id="selected-end-period" value="<?=$end_period_id;?>" required>
+              <button class=" btn-outline-secondary dropdown-toggle form-control text-start" type="button" id="end-period-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <?php 
+                  $selected_end_month = "End";
+                  foreach($periods as $p) {
+                    if($end_period_id == $p->id) {
+                      $selected_end_month = date('F Y', strtotime($p->yearmonth.'-01'));
+                      break;
+                    }
+                  }
+                  echo htmlspecialchars($selected_end_month);
+                ?>
+              </button>
+              <div class="dropdown-menu w-100 p-0" aria-labelledby="end-period-dropdown">
+                <div class="p-2">
+                  <input type="text" class="form-control period-search" placeholder="Search months...">
+                </div>
+                <div class="dropdown-divider m-0"></div>
+                <div class="period-options-container" style="max-height:200px;overflow-y:auto;">
+                  <?php foreach($periods as $p): ?>
+                    <button class="dropdown-item" type="button" data-id="<?=$p->id;?>"><?=date('F Y', strtotime($p->yearmonth.'-01'));?></button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100">Apply</button></div>
@@ -102,7 +162,21 @@
     <?php if(!empty($charts)): ?>
       <?php foreach($charts as $idx=>$chart): ?>
         <div class="mb-5">
-          <h6 class="mb-3">Rated by <strong><?=$chart['submitter_name'];?></strong> (<?=strtoupper($chart['submitter_role']);?>)</h6>
+          <?php
+            // Calculate average rating across all questions & months for this submitter
+            $totalRating = 0;
+            $ratingCount = 0;
+            foreach($chart['ratings'] as $question => $monthRatings){
+              foreach($monthRatings as $ym => $val){
+                if($val !== null){
+                  $totalRating += (int)$val;
+                  $ratingCount++;
+                }
+              }
+            }
+            $avgRating = $ratingCount ? round($totalRating / $ratingCount, 1) : 0;
+          ?>
+          <h6 class="mb-3">Rated by <strong><?=$chart['submitter_name'];?></strong> (<?=strtoupper($chart['submitter_role']);?>) : Average rating <?=$avgRating;?></h6>
           <?php
             // Prepare JavaScript data structures for the line-chart
             $canvasId   = 'chart_'.$idx;
@@ -165,7 +239,11 @@
                       title: { display: true, text: 'Rating' }
                     },
                     x: {
-                      title: { display: true, text: 'Month' }
+                      title: { display: true, text: 'Month' },
+                      offset: true,
+                      grid: {
+                        offset: true
+                      }
                     }
                   }
                 }
@@ -192,6 +270,78 @@
   if(sidebarMenu){sidebarMenu.querySelectorAll('.nav-link, .btn').forEach(l=>{l.addEventListener('click',()=>{if(window.innerWidth<=768)closeSidebar();});});}
   window.addEventListener('resize',()=>{if(window.innerWidth>768&&sidebarMenu.classList.contains('show'))closeSidebar();});
 })();
+
+// Add search functionality for user dropdown
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('user-search');
+  const userDropdown = document.querySelector('.custom-select-dropdown');
+  const userOptions = Array.from(userDropdown.querySelectorAll('.user-options-container .dropdown-item'));
+  const selectedIdField = document.getElementById('selected-user-id');
+  const dropdownButton = document.getElementById('user-dropdown');
+  
+  searchInput.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    
+    userOptions.forEach(option => {
+      const optionText = option.textContent.toLowerCase();
+      if (searchTerm === '' || optionText.includes(searchTerm)) {
+        option.style.display = '';
+      } else {
+        option.style.display = 'none';
+      }
+    });
+  });
+  
+  // Handle option selection
+  userDropdown.querySelectorAll('.user-options-container .dropdown-item').forEach(option => {
+    option.addEventListener('click', function() {
+      const userId = this.getAttribute('data-id');
+      selectedIdField.value = userId;
+      dropdownButton.textContent = this.textContent;
+    });
+  });
+  
+  // Period dropdowns search functionality
+  document.querySelectorAll('.period-search').forEach(searchField => {
+    searchField.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const optionsContainer = this.closest('.dropdown-menu').querySelector('.period-options-container');
+      const options = Array.from(optionsContainer.querySelectorAll('.dropdown-item'));
+      
+      options.forEach(option => {
+        const optionText = option.textContent.toLowerCase();
+        if (searchTerm === '' || optionText.includes(searchTerm)) {
+          option.style.display = '';
+        } else {
+          option.style.display = 'none';
+        }
+      });
+    });
+  });
+  
+  // Period option selection
+  document.querySelectorAll('.custom-select-dropdown').forEach(dropdown => {
+    const isStartPeriod = dropdown.querySelector('#start-period-dropdown');
+    const isEndPeriod = dropdown.querySelector('#end-period-dropdown');
+    
+    if (!isStartPeriod && !isEndPeriod) return; // Skip user dropdown which is handled separately
+    
+    const hiddenField = isStartPeriod ? document.getElementById('selected-start-period') : 
+                        isEndPeriod ? document.getElementById('selected-end-period') : null;
+    const dropdownBtn = isStartPeriod ? document.getElementById('start-period-dropdown') : 
+                        isEndPeriod ? document.getElementById('end-period-dropdown') : null;
+    
+    if (!hiddenField || !dropdownBtn) return;
+    
+    dropdown.querySelectorAll('.period-options-container .dropdown-item').forEach(option => {
+      option.addEventListener('click', function() {
+        const periodId = this.getAttribute('data-id');
+        hiddenField.value = periodId;
+        dropdownBtn.textContent = this.textContent;
+      });
+    });
+  });
+});
 </script>
 </body>
 </html> 

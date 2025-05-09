@@ -115,16 +115,16 @@
 
             <h4>Create New User</h4>
             <form method="post" class="row g-3 mb-4">
-                <div class="col-md-4"><input class="form-control" name="name" placeholder="Full name" required></div>
-                <div class="col-md-4"><input type="email" class="form-control" name="email" placeholder="Email" required></div>
+                <div class="col-md-2"><input class="form-control" name="name" placeholder="Full name" required></div>
+                <div class="col-md-2"><input type="email" class="form-control" name="email" placeholder="Email" required></div>
                 <div class="col-md-2"><input type="password" class="form-control" name="password" placeholder="Password" required></div>
                 <div class="col-md-2">
                     <select name="role_id" class="form-select" required>
                         <option value="2">Team Lead</option>
-                        <option value="3">Employee</option>
+                        <option value="3">Team Member</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select name="tl_id" class="form-select">
                         <option value="">Assign TL (for employee)</option>
                         <?php foreach ($tls as $tl): ?>
@@ -153,7 +153,7 @@
                                 <td><?= ($idx + 1); ?></td>
                                 <td class="editable editable-name" data-field="name"><?= $u->name; ?></td>
                                 <td class="editable editable-email" data-field="email"><?= $u->email; ?></td>
-                                <td class="editable editable-role" data-field="role_id"><?= $u->role_id == 2 ? 'TL' : 'Employee'; ?></td>
+                                <td class="editable editable-role" data-field="role_id"><?= $u->role_id == 2 ? 'TL' : 'TM'; ?></td>
                                 <td class="editable editable-tl" data-field="tl_id"><?php if ($u->tl_id) {
                                         foreach ($tls as $t) if ($t->id == $u->tl_id) echo $t->name;
                                     } else { echo '-'; } ?></td>

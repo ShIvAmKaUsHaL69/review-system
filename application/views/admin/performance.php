@@ -47,7 +47,7 @@
     <div class="card mb-4">
       <div class="card-body">
         <form method="get" action="<?=site_url('admin/performance');?>" class="row g-3">
-          <div class="col-md-4">
+          <div class="col-md-2">
             <label class="form-label">Team Lead</label>
             <select name="tl_id" class="form-select">
               <option value="">All Team Leads</option>
@@ -57,7 +57,7 @@
             </select>
           </div>
 
-          <div class="col-md-3">
+          <div class="col-md-2">
             <label class="form-label">Performance</label>
             <select name="level" class="form-select">
               <option value="">All</option>
@@ -68,14 +68,45 @@
             </select>
           </div>
 
-          <div class="col-md-3">
-            <label class="form-label">Month</label>
-            <select name="period_id" class="form-select">
-              <option value="">All Months</option>
-              <?php foreach($periods as $period): ?>
-              <option value="<?=$period->id;?>" <?=($filter_period==$period->id?'selected':'');?> ><?=date('F Y', strtotime($period->yearmonth.'-01'));?></option>
-              <?php endforeach; ?>
+          <!-- Review Type Filter -->
+          <div class="col-md-2">
+            <label class="form-label">Review Type</label>
+            <select name="review_type" class="form-select">
+              <option value="" <?=($filter_type==''?'selected':'');?>>All</option>
+              <option value="tl_emp" <?=($filter_type=='tl_emp'?'selected':'');?>>TL → TM</option>
+              <option value="emp_emp" <?=($filter_type=='emp_emp'?'selected':'');?>>TM → TM</option>
+              <option value="emp_tl" <?=($filter_type=='emp_tl'?'selected':'');?>>TM → TL</option>
             </select>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Month</label>
+            <div class="dropdown custom-select-dropdown">
+              <input type="hidden" name="period_id" id="selected-period" value="<?=$filter_period;?>">
+              <button class="dropdown-toggle form-control text-start" type="button" id="period-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <?php 
+                  $selected_month = "All Months";
+                  foreach($periods as $period) {
+                    if($filter_period == $period->id) {
+                      $selected_month = date('F Y', strtotime($period->yearmonth.'-01'));
+                      break;
+                    }
+                  }
+                  echo htmlspecialchars($selected_month);
+                ?>
+              </button>
+              <div class="dropdown-menu w-100 p-0" aria-labelledby="period-dropdown">
+                <div class="p-2">
+                  <input type="text" class="form-control period-search" placeholder="Search months...">
+                </div>
+                <div class="dropdown-divider m-0"></div>
+                <div class="period-options-container" style="max-height:200px;overflow-y:auto;">
+                  <?php foreach($periods as $period): ?>
+                    <button class="dropdown-item" type="button" data-id="<?=$period->id;?>"><?=date('F Y', strtotime($period->yearmonth.'-01'));?></button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100">Apply</button></div>
         </form>
@@ -86,36 +117,37 @@
       <table class="table table-striped table-bordered">
         <thead class="table-dark">
           <tr>
-            <th>#</th><th>Submitted By</th><th>Submitter Against</th><th>Month</th>
+            <th>#</th><th>Submitted By</th><th>Submitted To</th><th>Month</th><th>Average</th>
             <?php foreach($questions as $q): ?>
               <th><?=htmlspecialchars($q->text);?></th>
             <?php endforeach; ?>
+            
           </tr>
         </thead>
         <tbody>
           <?php foreach($submissions as $idx=>$s): ?>
           <tr>
             <td><?=($idx+1);?></td>
-            <td><?=$s->submitter;?> (<?=$s->submitter_role == 'tl' ? 'TL' : ($s->submitter_role == 'employee' ? 'EM' : 'Admin')?>)</td>
-            <td><?=$s->target;?> (<?=$s->target_role == 'tl' ? 'TL' : ($s->target_role == 'employee' ? 'EM' : 'Admin')?>)</td>
+            <td><?=$s->submitter;?> (<?=$s->submitter_role == 'tl' ? 'TL' : ($s->submitter_role == 'employee' ? 'TM' : 'Admin')?>)</td>
+            <td><?=$s->target;?> (<?=$s->target_role == 'tl' ? 'TL' : ($s->target_role == 'employee' ? 'TM' : 'Admin')?>)</td>
             <td><?=date('F Y', strtotime($s->yearmonth.'-01'));?></td>
+            <td><b><?= $s->avg_rating !== null ? htmlspecialchars($s->avg_rating) : '-' ?></b></td>
             <?php
-              $CI =& get_instance();
-              $db = $CI->load->database('', true);
-              $answers = $db->select('q.text, sa.rating, sa.comment')
-                            ->from('submission_answers sa')
-                            ->join('questions q','q.id = sa.question_id')
-                            ->where('sa.submission_id', $s->id)
-                            ->get()->result();
-              $answers_map = [];
-              foreach($answers as $answer){ $answers_map[$answer->text] = $answer; }
+              $answers_map = isset($s->answers) ? $s->answers : [];
               foreach($questions as $q){
                 if(isset($answers_map[$q->text])){
                   $a=$answers_map[$q->text];
-                  echo '<td><b>'.htmlspecialchars($a->rating).($a->comment?'</b> ('.htmlspecialchars($a->comment).')':'</b>').'</td>';
-                }else{ echo '<td>-</td>'; }
+                  echo '<td><b>'.htmlspecialchars($a->rating).'</b>';
+                  if($a->comment) {
+                    echo ' <a href="#" class="comment-link" data-bs-toggle="modal" data-bs-target="#commentModal" data-comment="'.htmlspecialchars($a->comment).'"><i class="fa-solid fa-comment-dots text-secondary"></i></a>';
+                  }
+                  echo '</td>';
+                } else {
+                  echo '<td>-</td>';
+                }
               }
             ?>
+            
           </tr>
           <?php endforeach; ?>
         </tbody>
@@ -136,6 +168,66 @@ document.addEventListener('DOMContentLoaded',function(){
   if(sidebarBackdrop){sidebarBackdrop.addEventListener('click',closeSidebar);}  
   if(sidebarMenu){sidebarMenu.querySelectorAll('.nav-link, .btn').forEach(l=>{l.addEventListener('click',()=>{if(window.innerWidth<=768)closeSidebar();});});}
   window.addEventListener('resize',()=>{if(window.innerWidth>768&&sidebarMenu.classList.contains('show'))closeSidebar();});
+});
+</script>
+
+<!-- Comment Modal -->
+<div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="commentModalLabel">Comment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="modalCommentText"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Script to handle comment modal
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.comment-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+      const comment = this.getAttribute('data-comment');
+      document.getElementById('modalCommentText').textContent = comment;
+    });
+  });
+
+  // Period dropdown search functionality
+  const periodSearchInput = document.querySelector('.period-search');
+  if (periodSearchInput) {
+    periodSearchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const options = document.querySelectorAll('.period-options-container .dropdown-item');
+      
+      options.forEach(option => {
+        const optionText = option.textContent.toLowerCase();
+        if (searchTerm === '' || optionText.includes(searchTerm)) {
+          option.style.display = '';
+        } else {
+          option.style.display = 'none';
+        }
+      });
+    });
+  }
+  
+  // Period dropdown option selection
+  const periodOptionsContainer = document.querySelector('.period-options-container');
+  if (periodOptionsContainer) {
+    periodOptionsContainer.querySelectorAll('.dropdown-item').forEach(option => {
+      option.addEventListener('click', function() {
+        const periodId = this.getAttribute('data-id');
+        document.getElementById('selected-period').value = periodId;
+        document.getElementById('period-dropdown').textContent = this.textContent;
+      });
+    });
+  }
 });
 </script>
 </body>

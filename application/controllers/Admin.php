@@ -84,51 +84,86 @@ class Admin extends MY_Controller
         $this->load->model(['Submission_model','Question_model']);
 
         // Read filters from query string
-        $filter_tl     = $this->input->get('tl_id');
-        $filter_period = $this->input->get('period_id');
-        $filter_level  = $this->input->get('level'); // outstanding|good|average|bad|null
+        $filter_tl      = $this->input->get('tl_id');
+        $filter_period  = $this->input->get('period_id');
+        $filter_level   = $this->input->get('level'); // outstanding|good|average|bad|null
+        $filter_type    = $this->input->get('review_type'); // tl_emp|emp_emp|emp_tl|null
 
         // Base data for dropdowns / filters
-        $data['tls']          = $this->User_model->all_tl();
-        $data['periods']      = $this->Submission_model->get_all_periods();
-        $data['filter_tl']    = $filter_tl;
-        $data['filter_period']= $filter_period;
-        $data['filter_level'] = $filter_level;
+        $data['tls']           = $this->User_model->all_tl();
+        $data['periods']       = $this->Submission_model->get_all_periods();
+        $data['filter_tl']     = $filter_tl;
+        $data['filter_period'] = $filter_period;
+        $data['filter_level']  = $filter_level;
+        $data['filter_type']   = $filter_type;
 
-        // Fetch submissions using existing helper (no rating-type filter here)
-        $submissions = $this->Submission_model->list_filtered($filter_tl, $filter_period, null);
+        // Fetch submissions using helper with direction filter
+        $submissions = $this->Submission_model->list_filtered($filter_tl, $filter_period, $filter_type);
 
-        // If performance filter is requested, further narrow down the list
+        // Pre-compute answers, average rating, and collect common question list
+        $common_questions = null; // intersection set
+        foreach ($submissions as $idx => $s) {
+            $answers = $this->Submission_model->get_answers($s->id);
+            $total   = 0;
+            $count   = 0;
+            $answers_map = [];
+            foreach ($answers as $a) {
+                $answers_map[$a->text] = $a;
+                $total += (int)$a->rating;
+                $count++;
+            }
+            $avg = $count ? ($total / $count) : null;
+            // Add new properties onto submission object so the view can access directly
+            $s->answers     = $answers_map;
+            $s->avg_rating  = $avg !== null ? round($avg, 2) : null;
+
+            // Build intersection of answered questions (to avoid blanks)
+            $answered_qs = array_keys($answers_map);
+            if ($common_questions === null) {
+                $common_questions = $answered_qs;
+            } else {
+                $common_questions = array_intersect($common_questions, $answered_qs);
+            }
+        }
+
+        // If performance filter selected, narrow submissions based on average rating
         if ($filter_level) {
             $filtered = [];
             foreach ($submissions as $s) {
-                $answers = $this->Submission_model->get_answers($s->id);
+                if ($s->avg_rating === null) continue; // skip incomplete rows
+                $avg = $s->avg_rating;
                 $keep = false;
-                foreach ($answers as $a) {
-                    $rating = (int)$a->rating;
-                    switch ($filter_level) {
-                        case 'outstanding':
-                            if ($rating >= 8) $keep = true;
-                            break;
-                        case 'good':
-                            if ($rating >= 5 && $rating < 8) $keep = true;
-                            break;
-                        case 'average':
-                            if ($rating >= 3 && $rating < 5) $keep = true;
-                            break;
-                        case 'bad':
-                            if ($rating < 3) $keep = true;
-                            break;
-                    }
-                    if ($keep) break; // No need to check further answers
+                switch ($filter_level) {
+                    case 'outstanding':
+                        if ($avg >= 8) $keep = true;
+                        break;
+                    case 'good':
+                        if ($avg >= 5 && $avg < 8) $keep = true;
+                        break;
+                    case 'average':
+                        if ($avg >= 3 && $avg < 5) $keep = true;
+                        break;
+                    case 'bad':
+                        if ($avg < 3) $keep = true;
+                        break;
                 }
                 if ($keep) $filtered[] = $s;
             }
             $submissions = $filtered;
         }
 
+        // Prepare ordered list of question objects (retain original order from DB if possible)
+        $question_objs = [];
+        if ($common_questions) {
+            foreach ($common_questions as $q_text) {
+                $obj       = new stdClass();
+                $obj->text = $q_text;
+                $question_objs[] = $obj;
+            }
+        }
+
         $data['submissions'] = $submissions;
-        $data['questions']   = $this->db->get('questions')->result();
+        $data['questions']   = $question_objs;
 
         $this->load->view('admin/performance', $data);
     }

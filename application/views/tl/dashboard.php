@@ -40,12 +40,14 @@
   <div id="page-content" class="p-4">
 
 <h4>My Team Members</h4>
+<!-- Performance summaries for current month -->
+
 <div class="table-responsive">
 <table class="table table-bordered table-striped">
 <thead class="table-dark"><tr><th>#</th><th>Name</th><th>Email</th><th>Action</th></tr></thead>
 <tbody>
 <?php foreach($employees as $idx=>$emp): ?>
-<?php $CI=&get_instance(); $can=$CI->Submission_model->can_submit_current($auth_user->id,$emp->id); ?>
+<?php $can = isset($can_submit[$emp->id]) ? $can_submit[$emp->id] : false; ?>
 <tr>
   <td><?=($idx+1);?></td>
   <td><?=$emp->name;?></td>

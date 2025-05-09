@@ -41,6 +41,32 @@ class Dashboard extends MY_Controller
         // Pass all questions to the view so we can show them as columns
         $data['questions'] = $this->db->get('questions')->result();
         
+        // Performance summary stats (current month)
+        $currentYM = date('Y-m');
+        // Build average rating per employee for current month
+        $avgRows = $this->db->select('u.id, u.name, AVG(sa.rating) as avg_rating')
+                           ->from('submissions s')
+                           ->join('submission_answers sa','sa.submission_id = s.id')
+                           ->join('periods p','p.id = s.period_id')
+                           ->join('users u','u.id = s.target_id')
+                           ->where('p.yearmonth', $currentYM)
+                           ->group_by(['u.id','u.name'])
+                           ->get()->result();
+
+        $outstanding = [];
+        $low = [];
+        foreach ($avgRows as $row) {
+            $avg = (float)$row->avg_rating;
+            if ($avg >= 8) {
+                $outstanding[] = $row;
+            } elseif ($avg <= 3) {
+                $low[] = $row;
+            }
+        }
+
+        $data['outstanding']    = $outstanding;
+        $data['low_performers'] = $low;
+        
         $this->load->view('admin/dashboard',$data);
     }
 
@@ -57,6 +83,7 @@ class Dashboard extends MY_Controller
             $can_submit[$emp->id] = $this->Submission_model->can_submit_current($this->user->id, $emp->id);
         }
         $data['can_submit'] = $can_submit;
+        
         
         // Load the correct TL dashboard view
         $this->load->view('tl/dashboard', $data);

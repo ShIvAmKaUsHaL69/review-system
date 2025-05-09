@@ -89,9 +89,9 @@
     <div class="col-md-8"><input class="form-control" name="text" placeholder="Question text" required></div>
     <div class="col-md-2">
         <select name="for_role" class="form-select">
-            <option value="2">For TL Form</option>
-            <option value="3">For Employee Form</option>
-            <option value="4">For Employee-to-Employee Form</option>
+            <option value="2">For TL → TM Form</option>
+            <option value="3">For TM → TL Form</option>
+            <option value="4">For TM → TM Form</option>
         </select>
     </div>
     <div class="col-md-2"><button class="btn btn-primary w-100">Add</button></div>
@@ -113,7 +113,7 @@
 </ul>
 </div>
 <div class="col-md-4">
-<h5 class="text-success"><i class="fa-solid fa-user me-1"></i> Employee Form Questions</h5>
+<h5 class="text-success"><i class="fa-solid fa-user me-1"></i> TM Form Questions</h5>
 <ul class="list-group mb-4">
     <?php foreach($questions_emp as $q): ?>
     <li class="list-group-item d-flex justify-content-between align-items-center question-item" data-id="<?=$q->id;?>">
@@ -127,7 +127,7 @@
 </ul>
 </div>
 <div class="col-md-4">
-<h5 class="text-info"><i class="fa-solid fa-users me-1"></i> Emp → Emp Form Questions</h5>
+<h5 class="text-info"><i class="fa-solid fa-users me-1"></i> TM → TM Form Questions</h5>
 <ul class="list-group mb-4">
     <?php foreach($questions_emp_to_emp as $q): ?>
     <li class="list-group-item d-flex justify-content-between align-items-center question-item" data-id="<?=$q->id;?>">
