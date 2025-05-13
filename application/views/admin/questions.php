@@ -97,10 +97,10 @@
     <div class="col-md-2">
     <select name="quater" class="form-select">
             <option value="0">Monthly</option>
-            <option value="1">Quatar 1 ( Jan - Mar )</option>
-            <option value="2">Quatar 2 ( Apr - June )</option>
-            <option value="3">Quatar 3 ( July - Sept )</option>
-            <option value="4">Quatar 4 ( Oct - Dec )</option>
+            <option value="1">Quatar 1 ( January )</option>
+            <option value="2">Quatar 2 ( April )</option>
+            <option value="3">Quatar 3 ( July )</option>
+            <option value="4">Quatar 4 ( October )</option>
         </select>
     </div>
     <div class="col-md-2"><button class="btn btn-primary w-100">Add</button></div>

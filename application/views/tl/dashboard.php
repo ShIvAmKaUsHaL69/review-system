@@ -44,7 +44,7 @@
 
 <div class="table-responsive">
 <table class="table table-bordered table-striped">
-<thead class="table-dark"><tr><th>#</th><th>Name</th><th>Email</th><th>Action</th></tr></thead>
+<thead class="table-dark"><tr><th>#</th><th>Name</th><th>Email</th><th>Designation</th><th>Action</th></tr></thead>
 <tbody>
 <?php foreach($employees as $idx=>$emp): ?>
 <?php $can = isset($can_submit[$emp->id]) ? $can_submit[$emp->id] : false; ?>
@@ -52,6 +52,7 @@
   <td><?=($idx+1);?></td>
   <td><?=$emp->name;?></td>
   <td><?=$emp->email;?></td>
+  <td><?=$emp->designation;?></td>
   <td>
   <?php if($can): ?>
   <a class="btn btn-sm btn-success" href="<?=site_url('submit-rating?target_id='.$emp->id);?>">Rate</a>

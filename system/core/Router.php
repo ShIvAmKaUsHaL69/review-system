@@ -48,7 +48,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * @category	Libraries
  * @author		EllisLab Dev Team
  * @link		https://codeigniter.com/userguide3/general/routing.html
- */
+ */	
+#[\AllowDynamicProperties]
 class CI_Router {
 
 	/**

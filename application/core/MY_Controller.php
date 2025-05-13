@@ -13,6 +13,7 @@
  * @property Question_model        $Question_model
  * @method int insert_id()
  */
+
 class MY_Controller extends CI_Controller
 {
     protected $user;

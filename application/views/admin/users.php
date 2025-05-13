@@ -65,6 +65,56 @@
             margin-left: 0.5rem;
         }
 
+        /* Search input styling */
+        .search-container {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        
+        .search-container i {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        
+        #user-search {
+            padding-right: 30px;
+        }
+
+        /* User details modal styling */
+        .user-details-section {
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+        }
+        
+        .user-details-section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-title {
+            background-color: #f8f9fa;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid #0d6efd;
+        }
+        
+        .team-member-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .team-member-list li {
+            padding: 0.5rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .team-member-list li:last-child {
+            border-bottom: none;
+        }
+
         @media(max-width:768px) {
             #sidebarMenu {
                 position: fixed;
@@ -138,6 +188,11 @@
 
             <h3>All Users</h3>
 
+            <div class="mb-3 search-container">
+                <input type="text" class="form-control" id="user-search" placeholder="Search by name...">
+                <i class="fa-solid fa-search"></i>
+            </div>
+
             <div class="table-responsive">
                 <table class="table table-bordered table-striped">
                     <thead class="table-dark">
@@ -159,7 +214,7 @@
                                 <td class="editable editable-name" data-field="name"><?= $u->name; ?></td>
                                 <td class="editable editable-email" data-field="email"><?= $u->email; ?></td>
                                 <td class="editable editable-password" data-field="password"><?= $u->password; ?></td>
-                                <td class="editable editable-role" data-field="role_id"><?= $u->role_id == 2 ? 'TL' : 'TM'; ?></td>
+                                <td class="editable editable-role" data-field="role_id"><?= $u->role_id == 2 ? '<span class="text-primary fw-bold">TL</span>' : '<span class="text-success">TM</span>'; ?></td>
                                 <td class="editable editable-tl" data-field="tl_id"><?php if ($u->tl_id) {
                                         foreach ($tls as $t) if ($t->id == $u->tl_id) echo $t->name;
                                     } else { echo '-'; } ?></td>
@@ -169,6 +224,7 @@
                                         <button class="btn btn-sm btn-success save-user-btn"><i class="fa-solid fa-check"></i> Save</button>
                                         <button class="btn btn-sm btn-secondary cancel-edit-btn ms-1"><i class="fa-solid fa-times"></i> Cancel</button>
                                     </div>
+                                    <button class="btn btn-sm btn-info view-user-btn me-1" data-id="<?= $u->id; ?>"><i class="fa-solid fa-eye"></i> View</button>
                                     <button class="btn btn-sm btn-primary edit-user-btn"><i class="fa-solid fa-pen"></i> Edit</button>
                                 </td>
                             </tr>
@@ -179,6 +235,27 @@
 
         </div>
     </div>
+    
+    <!-- User Details Modal -->
+    <div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userDetailsModalLabel">User Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="userDetailsContent">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -259,6 +336,136 @@
             { id: '<?=$tl->id;?>', name: '<?=htmlspecialchars($tl->name);?>' },
             <?php endforeach; ?>
         ];
+        
+        // User search functionality
+        const userSearch = document.getElementById('user-search');
+        if (userSearch) {
+            userSearch.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                const rows = document.querySelectorAll('.user-row');
+                
+                // If search is empty, restore original order
+                if (!searchTerm) {
+                    rows.forEach(row => row.style.display = '');
+                    return;
+                }
+                
+                // Group the matching rows by TL
+                const matchingTLs = new Set();
+                const matchingEmployeesByTL = {};
+                const otherMatching = [];
+                
+                rows.forEach(row => {
+                    const name = row.querySelector('.editable-name').textContent.toLowerCase();
+                    const isMatch = name.includes(searchTerm);
+                    const isTL = row.dataset.role === '2';
+                    const tlId = isTL ? row.dataset.id : row.dataset.tl;
+                    
+                    // Hide non-matching rows
+                    row.style.display = isMatch ? '' : 'none';
+                    
+                    if (isMatch) {
+                        if (isTL) {
+                            matchingTLs.add(tlId);
+                        } else if (tlId) {
+                            if (!matchingEmployeesByTL[tlId]) {
+                                matchingEmployeesByTL[tlId] = [];
+                            }
+                            matchingEmployeesByTL[tlId].push(row);
+                        } else {
+                            otherMatching.push(row);
+                        }
+                    }
+                });
+                
+                // For each matching TL, show their employees even if they don't match
+                matchingTLs.forEach(tlId => {
+                    rows.forEach(row => {
+                        if (row.dataset.tl === tlId && row.style.display === 'none') {
+                            row.style.display = '';
+                        }
+                    });
+                });
+                
+                // Reorder the table to show TLs first followed by their team members
+                if (searchTerm && (matchingTLs.size > 0 || Object.keys(matchingEmployeesByTL).length > 0)) {
+                    const tbody = document.querySelector('tbody');
+                    
+                    // First, hide all rows
+                    rows.forEach(row => {
+                        row.style.display = 'none';
+                        // Store original index for restoring later
+                        if (!row.dataset.originalIndex) {
+                            row.dataset.originalIndex = Array.from(tbody.children).indexOf(row);
+                        }
+                    });
+                    
+                    // Create ordered array of rows to show
+                    const orderedRows = [];
+                    
+                    // First add matching TLs and their team members
+                    rows.forEach(row => {
+                        if (row.dataset.role === '2' && matchingTLs.has(row.dataset.id)) {
+                            orderedRows.push(row);
+                            
+                            // Find and add all employees of this TL
+                            rows.forEach(empRow => {
+                                if (empRow.dataset.tl === row.dataset.id) {
+                                    orderedRows.push(empRow);
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Add non-matching TLs with matching employees
+                    Object.keys(matchingEmployeesByTL).forEach(tlId => {
+                        if (!matchingTLs.has(tlId)) {
+                            // Find TL row
+                            rows.forEach(row => {
+                                if (row.dataset.role === '2' && row.dataset.id === tlId) {
+                                    orderedRows.push(row);
+                                }
+                            });
+                            
+                            // Add matching employees
+                            matchingEmployeesByTL[tlId].forEach(empRow => {
+                                if (!orderedRows.includes(empRow)) {
+                                    orderedRows.push(empRow);
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Add other matching rows not yet added
+                    otherMatching.forEach(row => {
+                        if (!orderedRows.includes(row)) {
+                            orderedRows.push(row);
+                        }
+                    });
+                    
+                    // Show the rows in the new order
+                    orderedRows.forEach((row, index) => {
+                        row.style.display = '';
+                        tbody.appendChild(row);
+                    });
+                } else if (!searchTerm) {
+                    // Restore original order when search is cleared
+                    const tbody = document.querySelector('tbody');
+                    const rowsArray = Array.from(rows);
+                    
+                    // Sort by original index
+                    rowsArray.sort((a, b) => {
+                        return parseInt(a.dataset.originalIndex) - parseInt(b.dataset.originalIndex);
+                    });
+                    
+                    // Reattach in original order
+                    rowsArray.forEach(row => {
+                        tbody.appendChild(row);
+                        row.style.display = '';
+                    });
+                }
+            });
+        }
         
         // Edit button click handler
         document.querySelectorAll('.edit-user-btn').forEach(btn => {
@@ -355,7 +562,7 @@
             roleCell.innerHTML = `
                 <select name="role_id">
                     <option value="2" ${roleValue === '2' ? 'selected' : ''}>TL</option>
-                    <option value="3" ${roleValue === '3' ? 'selected' : ''}>Employee</option>
+                    <option value="3" ${roleValue === '3' ? 'selected' : ''}>TM</option>
                 </select>
             `;
             
@@ -493,6 +700,169 @@
             row.querySelector('.edit-controls').classList.add('d-none');
             row.querySelector('.edit-user-btn').classList.remove('d-none');
         }
+
+        // View button click handler
+        const userDetailsModal = new bootstrap.Modal(document.getElementById('userDetailsModal'));
+        const userDetailsContent = document.getElementById('userDetailsContent');
+        
+        document.querySelectorAll('.view-user-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const userId = this.dataset.id;
+                
+                // Show loading spinner
+                userDetailsContent.innerHTML = '<div class="d-flex justify-content-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+                
+                // Show modal
+                userDetailsModal.show();
+                
+                // Collect user data
+                const userRow = this.closest('tr');
+                const userData = {
+                    id: userId,
+                    name: userRow.querySelector('.editable-name').textContent.trim(),
+                    email: userRow.querySelector('.editable-email').textContent.trim(),
+                    role: userRow.querySelector('.editable-role').textContent.trim(),
+                    designation: userRow.querySelector('.editable-designation').textContent.trim(),
+                    tlName: userRow.querySelector('.editable-tl').textContent.trim() !== '-' ? 
+                            userRow.querySelector('.editable-tl').textContent.trim() : null,
+                    roleId: userRow.dataset.role,
+                    tlId: userRow.dataset.tl || null
+                };
+                
+                // Prepare HTML content
+                let modalHtml = '';
+                
+                // 1. User details section
+                modalHtml += `
+                <div class="user-details-section">
+                    <h5 class="section-title">User Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> ${userData.name}</p>
+                            <p><strong>Email:</strong> ${userData.email}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Role:</strong> ${userData.role}</p>
+                            <p><strong>Designation:</strong> ${userData.designation}</p>
+                        </div>
+                    </div>
+                </div>`;
+                
+                // If the user is a TL (role_id = 2), show their team members
+                if (userData.roleId === '2') {
+                    // Find team members
+                    const teamMembers = [];
+                    document.querySelectorAll('.user-row').forEach(row => {
+                        if (row.dataset.tl === userId) {
+                            teamMembers.push({
+                                name: row.querySelector('.editable-name').textContent.trim(),
+                                email: row.querySelector('.editable-email').textContent.trim(),
+                                designation: row.querySelector('.editable-designation').textContent.trim()
+                            });
+                        }
+                    });
+                    
+                    // Add team members section
+                    modalHtml += `
+                    <div class="user-details-section">
+                        <h5 class="section-title">Team Members (${teamMembers.length})</h5>
+                        ${teamMembers.length > 0 ? '<ul class="team-member-list">' : '<p>No team members found.</p>'}`;
+                    
+                    if (teamMembers.length > 0) {
+                        teamMembers.forEach(member => {
+                            modalHtml += `
+                            <li>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>${member.name}</strong>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <span class="text-muted">${member.designation}</span>
+                                    </div>
+                                </div>
+                                <div class="text-muted small">${member.email}</div>
+                            </li>`;
+                        });
+                        modalHtml += '</ul>';
+                    }
+                    
+                    modalHtml += '</div>';
+                } else {
+                    // For regular employees, show their TL first (if available)
+                    if (userData.tlId) {
+                        // Find TL details
+                        let tlDetails = null;
+                        document.querySelectorAll('.user-row').forEach(row => {
+                            if (row.dataset.id === userData.tlId) {
+                                tlDetails = {
+                                    name: row.querySelector('.editable-name').textContent.trim(),
+                                    email: row.querySelector('.editable-email').textContent.trim(),
+                                    designation: row.querySelector('.editable-designation').textContent.trim()
+                                };
+                            }
+                        });
+                        
+                        if (tlDetails) {
+                            // Add TL section
+                            modalHtml += `
+                            <div class="user-details-section">
+                                <h5 class="section-title">Team Lead</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Name:</strong> ${tlDetails.name}</p>
+                                        <p><strong>Email:</strong> ${tlDetails.email}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Designation:</strong> ${tlDetails.designation}</p>
+                                    </div>
+                                </div>
+                            </div>`;
+                        }
+                        
+                        // Find fellow team members
+                        const teamMembers = [];
+                        document.querySelectorAll('.user-row').forEach(row => {
+                            if (row.dataset.tl === userData.tlId && row.dataset.id !== userData.id) {
+                                teamMembers.push({
+                                    name: row.querySelector('.editable-name').textContent.trim(),
+                                    email: row.querySelector('.editable-email').textContent.trim(),
+                                    designation: row.querySelector('.editable-designation').textContent.trim()
+                                });
+                            }
+                        });
+                        
+                        // Add team members section
+                        modalHtml += `
+                        <div class="user-details-section">
+                            <h5 class="section-title">Fellow Team Members (${teamMembers.length})</h5>
+                            ${teamMembers.length > 0 ? '<ul class="team-member-list">' : '<p>No other team members found.</p>'}`;
+                        
+                        if (teamMembers.length > 0) {
+                            teamMembers.forEach(member => {
+                                modalHtml += `
+                                <li>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>${member.name}</strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <span class="text-muted">${member.designation}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-muted small">${member.email}</div>
+                                </li>`;
+                            });
+                            modalHtml += '</ul>';
+                        }
+                        
+                        modalHtml += '</div>';
+                    }
+                }
+                
+                // Update modal content
+                userDetailsContent.innerHTML = modalHtml;
+            });
+        });
     });
     </script>
 </body>
