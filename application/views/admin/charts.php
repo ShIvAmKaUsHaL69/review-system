@@ -86,9 +86,14 @@
                 </div>
                 <div class="dropdown-divider m-0"></div>
                 <div class="user-options-container" style="max-height:200px;overflow-y:auto;">
-                  <?php foreach($users as $u): ?>
+                  <?php foreach($users as $u): 
+                  if($u->id != "1") {
+                  ?>
+                  
                     <button class="dropdown-item" type="button" data-id="<?=$u->id;?>"><?=$u->name;?> (<?=$u->role_id==2?'TL':'TM';?>)</button>
-                  <?php endforeach; ?>
+                  <?php 
+                  }
+                  endforeach; ?>
                 </div>
               </div>
             </div>

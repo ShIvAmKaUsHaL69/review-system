@@ -106,12 +106,13 @@
 <div class="">
 <div class="row g-2 mb-4">
         <div class="col-md-3">
-            <div class="card text-bg-primary">
+           <div class="card text-bg-dark">  
                 <div class="card-body">
-                    <h5 class="card-title">Total Team Members</h5>
-                    <p class="display-6"><?=count($employees);?></p>
+                    <h5 class="card-title">Total Employees</h5>
+                    <p class="display-6"><?=count($employees) + count($tls);?></p>
                 </div>
-            </div>
+            </div>  
+
         </div>
         <div class="col-md-3">
             <div class="card text-bg-success">
@@ -122,10 +123,10 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-bg-dark">  
+            <div class="card text-bg-primary">
                 <div class="card-body">
-                    <h5 class="card-title">Total Members</h5>
-                    <p class="display-6"><?=count($employees) + count($tls);?></p>
+                    <h5 class="card-title">Total Team Members</h5>
+                    <p class="display-6"><?=count($employees);?></p>
                 </div>
             </div>
         </div>

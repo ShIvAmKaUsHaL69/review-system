@@ -229,6 +229,9 @@ class Admin extends MY_Controller
         if ($this->input->post('email')) {
             $updateData['email'] = $this->input->post('email');
         }
+        if ($this->input->post('password')) {
+            $updateData['password'] = $this->input->post('password');
+        }
         
         if ($this->input->post('tl_id') !== null) {
             $updateData['tl_id'] = $this->input->post('tl_id') ?: null;

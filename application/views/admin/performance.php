@@ -57,17 +57,6 @@
             </select>
           </div>
 
-          <div class="col-md-2">
-            <label class="form-label">Performance</label>
-            <select name="level" class="form-select">
-              <option value="">All</option>
-              <option value="outstanding" <?=($filter_level=='outstanding'?'selected':'');?>>Outstanding</option>
-              <option value="good" <?=($filter_level=='good'?'selected':'');?>>Good</option>
-              <option value="average" <?=($filter_level=='average'?'selected':'');?>>Average</option>
-              <option value="bad" <?=($filter_level=='bad'?'selected':'');?>>Bad</option>
-            </select>
-          </div>
-
           <!-- Review Type Filter -->
           <div class="col-md-2">
             <label class="form-label">Review Type</label>
@@ -76,6 +65,17 @@
               <option value="tl_emp" <?=($filter_type=='tl_emp'?'selected':'');?>>TL → TM</option>
               <option value="emp_emp" <?=($filter_type=='emp_emp'?'selected':'');?>>TM → TM</option>
               <option value="emp_tl" <?=($filter_type=='emp_tl'?'selected':'');?>>TM → TL</option>
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Performance</label>
+            <select name="level" class="form-select">
+              <option value="">All</option>
+              <option value="outstanding" <?=($filter_level=='outstanding'?'selected':'');?>>Outstanding</option>
+              <option value="good" <?=($filter_level=='good'?'selected':'');?>>Good</option>
+              <option value="average" <?=($filter_level=='average'?'selected':'');?>>Average</option>
+              <option value="bad" <?=($filter_level=='bad'?'selected':'');?>>Bad</option>
             </select>
           </div>
 

@@ -142,6 +142,7 @@
                             <th>#</th>
                             <th>Name</th>
                             <th>Email</th>
+                            <th>Password</th>
                             <th>Role</th>
                             <th>Team Lead</th>
                             <th>Actions</th>
@@ -153,6 +154,7 @@
                                 <td><?= ($idx + 1); ?></td>
                                 <td class="editable editable-name" data-field="name"><?= $u->name; ?></td>
                                 <td class="editable editable-email" data-field="email"><?= $u->email; ?></td>
+                                <td class="editable editable-password" data-field="password"><?= $u->password; ?></td>
                                 <td class="editable editable-role" data-field="role_id"><?= $u->role_id == 2 ? 'TL' : 'TM'; ?></td>
                                 <td class="editable editable-tl" data-field="tl_id"><?php if ($u->tl_id) {
                                         foreach ($tls as $t) if ($t->id == $u->tl_id) echo $t->name;
@@ -333,6 +335,11 @@
             const emailValue = emailCell.textContent.trim();
             emailCell.innerHTML = `<input type="email" name="email" value="${emailValue}" required>`;
             
+            // Password field
+            const passwordCell = row.querySelector('.editable-password');
+            const passwordValue = passwordCell.textContent.trim();
+            passwordCell.innerHTML = `<input type="text" name="password" value="${passwordValue}" required>`;
+            
             // Role field
             const roleCell = row.querySelector('.editable-role');
             const roleValue = currentRole;
@@ -370,6 +377,7 @@
             // Collect form data
             const nameInput = row.querySelector('[name="name"]');
             const emailInput = row.querySelector('[name="email"]');
+            const passwordInput = row.querySelector('[name="password"]');
             const roleSelect = row.querySelector('[name="role_id"]');
             const tlSelect = row.querySelector('[name="tl_id"]');
             
@@ -391,6 +399,7 @@
                 id: userId,
                 name: nameInput.value.trim(),
                 email: emailInput.value.trim(),
+                password: passwordInput.value.trim(),
                 role_id: roleSelect.value
             };
             
@@ -418,6 +427,7 @@
                     // Update row with new values
                     row.querySelector('.editable-name').textContent = userData.name;
                     row.querySelector('.editable-email').textContent = userData.email;
+                    row.querySelector('.editable-password').textContent = userData.password;
                     row.querySelector('.editable-role').textContent = data.role_name || (userData.role_id === '2' ? 'TL' : 'Employee');
                     
                     // Update TL cell
