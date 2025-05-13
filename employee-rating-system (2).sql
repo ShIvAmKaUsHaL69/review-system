@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 07, 2025 at 12:03 PM
+-- Generation Time: May 13, 2025 at 12:55 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -37,6 +37,13 @@ CREATE TABLE `periods` (
 --
 
 INSERT INTO `periods` (`id`, `yearmonth`) VALUES
+(8, '2024-10'),
+(7, '2024-11'),
+(6, '2024-12'),
+(5, '2025-01'),
+(4, '2025-02'),
+(3, '2025-03'),
+(2, '2025-04'),
 (1, '2025-05');
 
 -- --------------------------------------------------------
@@ -49,6 +56,7 @@ CREATE TABLE `questions` (
   `id` int(10) UNSIGNED NOT NULL,
   `text` varchar(255) NOT NULL,
   `for_role` tinyint(3) UNSIGNED NOT NULL,
+  `quater` int(11) NOT NULL COMMENT '0 for monthly | 1 for jan- march | 2 for april - june | 3 for july to sept | 4 for oct to december',
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -56,10 +64,13 @@ CREATE TABLE `questions` (
 -- Dumping data for table `questions`
 --
 
-INSERT INTO `questions` (`id`, `text`, `for_role`, `created_at`) VALUES
-(2, 'how is your employee performing', 2, '2025-05-06 16:28:41'),
-(3, 'how is your tl ', 3, '2025-05-06 16:28:48'),
-(4, 'how is your fellow employee', 4, '2025-05-07 10:18:56');
+INSERT INTO `questions` (`id`, `text`, `for_role`, `quater`, `created_at`) VALUES
+(2, 'how is your employee performing', 2, 0, '2025-05-06 16:28:41'),
+(3, 'how is your tl ', 3, 0, '2025-05-06 16:28:48'),
+(4, 'how is your fellow employee', 4, 0, '2025-05-07 10:18:56'),
+(5, 'how well is he learning', 2, 0, '2025-05-09 10:17:30'),
+(6, 'how is he behaving', 2, 0, '2025-05-09 10:17:37'),
+(7, 'how quick is his mind', 2, 0, '2025-05-09 10:17:49');
 
 -- --------------------------------------------------------
 
@@ -101,12 +112,10 @@ CREATE TABLE `submissions` (
 --
 
 INSERT INTO `submissions` (`id`, `submitter_id`, `target_id`, `period_id`, `created_at`) VALUES
-(3, 4, 5, 1, '2025-05-06 16:44:30'),
-(4, 5, 4, 1, '2025-05-07 10:43:53'),
-(5, 5, 3, 1, '2025-05-07 10:44:08'),
-(6, 4, 3, 1, '2025-05-07 10:46:09'),
-(7, 3, 5, 1, '2025-05-07 10:47:15'),
-(8, 3, 4, 1, '2025-05-07 10:47:29');
+(16, 3, 5, 1, '2025-05-09 13:37:35'),
+(17, 3, 4, 1, '2025-05-09 13:37:51'),
+(18, 5, 3, 1, '2025-05-09 13:38:17'),
+(19, 5, 4, 1, '2025-05-09 13:38:26');
 
 -- --------------------------------------------------------
 
@@ -127,12 +136,16 @@ CREATE TABLE `submission_answers` (
 --
 
 INSERT INTO `submission_answers` (`id`, `submission_id`, `question_id`, `rating`, `comment`) VALUES
-(3, 3, 3, 1, 'chatgpt'),
-(4, 4, 4, 2, 'nice employee'),
-(5, 5, 3, 5, 'nice tl'),
-(6, 6, 3, 5, 'nice tl'),
-(7, 7, 2, 5, 'nice employee'),
-(8, 8, 2, 1, 'very lazy');
+(31, 16, 2, 8, 'nice employee'),
+(32, 16, 5, 2, 'not learning '),
+(33, 16, 6, 1, ''),
+(34, 16, 7, 1, 'low'),
+(35, 17, 2, 10, 'good'),
+(36, 17, 5, 10, ''),
+(37, 17, 6, 10, ''),
+(38, 17, 7, 10, ''),
+(39, 18, 3, 1, 'not good'),
+(40, 19, 4, 10, 'nice employee');
 
 -- --------------------------------------------------------
 
@@ -145,6 +158,7 @@ CREATE TABLE `users` (
   `name` varchar(80) NOT NULL,
   `email` varchar(120) NOT NULL,
   `password` varchar(255) NOT NULL,
+  `designation` varchar(255) NOT NULL,
   `role_id` tinyint(3) UNSIGNED NOT NULL,
   `tl_id` int(10) UNSIGNED DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp()
@@ -154,11 +168,12 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `password`, `role_id`, `tl_id`, `created_at`) VALUES
-(2, 'admin', 'shivamkaushal181@gmail.com', 'password@123', 1, 0, '2025-05-06 16:15:40'),
-(3, 'ShIvAmKaUsHaL', '9720sk41@gmail.com', 'shivam0432', 2, 0, '2025-05-06 16:25:25'),
-(4, 'Gautam', 'gautammehra444@gmail.com', 'gautam@123', 3, 3, '2025-05-06 16:25:59'),
-(5, 'aman', 'aman@gmail.com', 'aman@123', 3, 3, '2025-05-06 16:41:17');
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `designation`, `role_id`, `tl_id`, `created_at`) VALUES
+(2, 'admin', 'shivamkaushal181@gmail.com', 'password@123', '', 1, 0, '2025-05-06 16:15:40'),
+(3, 'ShIvAmKaUsHaL', '9720sk41@gmail.com', 'shivam0432', '', 2, 0, '2025-05-06 16:25:25'),
+(4, 'Gautam', 'gautammehra444@gmail.com', 'gautam@123', '', 3, 3, '2025-05-06 16:25:59'),
+(5, 'aman', 'aman@gmail.com', 'aman@123', '', 3, 3, '2025-05-06 16:41:17'),
+(6, 'new', 'new@gmail.com', 'new', 'developer', 3, 3, '2025-05-13 13:57:39');
 
 --
 -- Indexes for dumped tables
@@ -219,31 +234,31 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `periods`
 --
 ALTER TABLE `periods`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `questions`
 --
 ALTER TABLE `questions`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `submissions`
 --
 ALTER TABLE `submissions`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `submission_answers`
 --
 ALTER TABLE `submission_answers`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Constraints for dumped tables
