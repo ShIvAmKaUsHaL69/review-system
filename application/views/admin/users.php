@@ -132,8 +132,11 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <div class="col-md-2"><input type="text" class="form-control" name="designation" placeholder="Designation" required></div>
                 <div class="col-md-2"><button class="btn btn-primary w-100">Add User</button></div>
             </form>
+
+            <h3>All Users</h3>
 
             <div class="table-responsive">
                 <table class="table table-bordered table-striped">
@@ -145,6 +148,7 @@
                             <th>Password</th>
                             <th>Role</th>
                             <th>Team Lead</th>
+                            <th>Designation</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -159,6 +163,7 @@
                                 <td class="editable editable-tl" data-field="tl_id"><?php if ($u->tl_id) {
                                         foreach ($tls as $t) if ($t->id == $u->tl_id) echo $t->name;
                                     } else { echo '-'; } ?></td>
+                                <td class="editable editable-designation" data-field="designation"><?= $u->designation; ?></td>
                                 <td>
                                     <div class="edit-controls d-none">
                                         <button class="btn btn-sm btn-success save-user-btn"><i class="fa-solid fa-check"></i> Save</button>
@@ -339,6 +344,10 @@
             const passwordCell = row.querySelector('.editable-password');
             const passwordValue = passwordCell.textContent.trim();
             passwordCell.innerHTML = `<input type="text" name="password" value="${passwordValue}" required>`;
+
+            const designationCell = row.querySelector('.editable-designation');
+            const designationValue = designationCell.textContent.trim();
+            designationCell.innerHTML = `<input type="text" name="designation" value="${designationValue}" required>`;
             
             // Role field
             const roleCell = row.querySelector('.editable-role');
@@ -380,7 +389,7 @@
             const passwordInput = row.querySelector('[name="password"]');
             const roleSelect = row.querySelector('[name="role_id"]');
             const tlSelect = row.querySelector('[name="tl_id"]');
-            
+            const designationInput = row.querySelector('[name="designation"]');
             // Validate inputs
             if (!nameInput.value.trim()) {
                 alert('Name cannot be empty');
@@ -400,7 +409,8 @@
                 name: nameInput.value.trim(),
                 email: emailInput.value.trim(),
                 password: passwordInput.value.trim(),
-                role_id: roleSelect.value
+                role_id: roleSelect.value,
+                designation: designationInput.value.trim()
             };
             
             // For employees, include TL ID
@@ -429,7 +439,7 @@
                     row.querySelector('.editable-email').textContent = userData.email;
                     row.querySelector('.editable-password').textContent = userData.password;
                     row.querySelector('.editable-role').textContent = data.role_name || (userData.role_id === '2' ? 'TL' : 'Employee');
-                    
+                    row.querySelector('.editable-designation').textContent = userData.designation;
                     // Update TL cell
                     const tlCell = row.querySelector('.editable-tl');
                     if (userData.role_id === '2') {

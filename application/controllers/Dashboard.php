@@ -26,6 +26,7 @@ class Dashboard extends MY_Controller
         $filter_tl = $this->input->get('tl_id');
         $filter_period = $this->input->get('period_id');
         $filter_type = $this->input->get('type');
+        $filter_month = $this->input->get('month'); // New filter for month
         
         // Load data for filters
         $data['tls'] = $this->User_model->all_tl();
@@ -33,6 +34,8 @@ class Dashboard extends MY_Controller
         $data['filter_tl'] = $filter_tl;
         $data['filter_period'] = $filter_period;
         $data['filter_type'] = $filter_type;
+        $data['filter_month'] = $filter_month;
+        $data['current_month'] = date('Y-m');
         
         // Apply filters to data
         $data['submissions'] = $this->Submission_model->list_filtered($filter_tl, $filter_period, $filter_type);
@@ -41,15 +44,16 @@ class Dashboard extends MY_Controller
         // Pass all questions to the view so we can show them as columns
         $data['questions'] = $this->db->get('questions')->result();
         
-        // Performance summary stats (current month)
-        $currentYM = date('Y-m');
-        // Build average rating per employee for current month
+        // Performance summary stats for selected or current month
+        $selectedYM = $filter_month ?: date('Y-m');
+        
+        // Build average rating per employee for selected month
         $avgRows = $this->db->select('u.id, u.name, AVG(sa.rating) as avg_rating')
                            ->from('submissions s')
                            ->join('submission_answers sa','sa.submission_id = s.id')
                            ->join('periods p','p.id = s.period_id')
                            ->join('users u','u.id = s.target_id')
-                           ->where('p.yearmonth', $currentYM)
+                           ->where('p.yearmonth', $selectedYM)
                            ->group_by(['u.id','u.name'])
                            ->get()->result();
 
@@ -66,6 +70,7 @@ class Dashboard extends MY_Controller
 
         $data['outstanding']    = $outstanding;
         $data['low_performers'] = $low;
+        $data['selected_month'] = $selectedYM;
         
         $this->load->view('admin/dashboard',$data);
     }

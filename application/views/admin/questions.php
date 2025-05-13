@@ -86,12 +86,21 @@
 
 <h4>Create Question</h4>
 <form method="post" class="row g-3 mb-4">
-    <div class="col-md-8"><input class="form-control" name="text" placeholder="Question text" required></div>
+    <div class="col-md-6"><input class="form-control" name="text" placeholder="Question text" required></div>
     <div class="col-md-2">
         <select name="for_role" class="form-select">
             <option value="2">For TL → TM Form</option>
             <option value="3">For TM → TL Form</option>
             <option value="4">For TM → TM Form</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+    <select name="quater" class="form-select">
+            <option value="0">Monthly</option>
+            <option value="1">Quatar 1 ( Jan - Mar )</option>
+            <option value="2">Quatar 2 ( Apr - June )</option>
+            <option value="3">Quatar 3 ( July - Sept )</option>
+            <option value="4">Quatar 4 ( Oct - Dec )</option>
         </select>
     </div>
     <div class="col-md-2"><button class="btn btn-primary w-100">Add</button></div>

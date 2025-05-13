@@ -104,6 +104,9 @@
   <div id="page-content" class="p-4">
       <h4>Admin Dashboard</h4>
 <div class="">
+<!-- Month filter -->
+
+
 <div class="row g-2 mb-4">
         <div class="col-md-3">
            <div class="card text-bg-dark">  
@@ -133,10 +136,10 @@
         <div class="col-md-3">
             <div class="card text-bg-secondary">
                 <div class="card-body">
-                    <h5 class="card-title">Total Submissions (<?=date('F Y');?>)</h5>
+                    <h5 class="card-title">Total Submissions (<?= date('F Y', strtotime($selected_month.'-01')); ?>)</h5>
                     <p class="display-6"><?php 
-                      $current_month_submissions = array_filter($submissions, function($s) {
-                          return date('Y-m', strtotime($s->yearmonth.'-01')) === date('Y-m');
+                      $current_month_submissions = array_filter($submissions, function($s) use ($selected_month) {
+                          return $s->yearmonth === $selected_month;
                       });
                       echo count($current_month_submissions);
                     ?></p>
@@ -144,99 +147,45 @@
             </div>
         </div>
     </div>
-
-
-    <!-- <h4>Submissions</h4>
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" action="<?=site_url('dashboard');?>" class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Team Lead</label>
-                    <select name="tl_id" class="form-select">
-                        <option value="">All Team Leads</option>
-                        <?php foreach($tls as $tl): ?>
-                        <option value="<?=$tl->id;?>" <?=($filter_tl==$tl->id?'selected':'');?>><?=$tl->name;?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label">Rating Type</label>
-                    <select name="type" class="form-select">
-                        <option value="">All Types</option>
-                        <option value="tl_emp" <?=($filter_type=='tl_emp'?'selected':'');?>>TL → Employee</option>
-                        <option value="emp_tl" <?=($filter_type=='emp_tl'?'selected':'');?>>Employee → TL</option>
-                        <option value="emp_emp" <?=($filter_type=='emp_emp'?'selected':'');?>>Employee → Employee</option>
-                    </select>
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label">Month</label>
-                    <select name="period_id" class="form-select">
-                        <option value="">All Months</option>
-                        <?php foreach($periods as $period): ?>
-                        <option value="<?=$period->id;?>" <?=($filter_period==$period->id?'selected':'');?>>
-                            <?=date('F Y', strtotime($period->yearmonth.'-01'));?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <div class="col-md-2 d-flex align-items-end">
-                    <div class="d-flex gap-2 w-100">
-                        <button type="submit" class="btn btn-primary flex-grow-1">Apply</button>
-                    </div>
-                </div>
-            </form>
+    <h5>Filter Performance by Month</h5>
+    
+    <div class="row mb-3">
+  <div class="col-md-3">
+    <div class="dropdown custom-select-dropdown">
+      <input type="hidden" name="month" id="selected-period" value="<?=$filter_month;?>">
+      <button class="dropdown-toggle form-control text-start" type="button" id="period-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <?php 
+          $selected_month_display = "Current Month (" . date('F Y') . ")";
+          foreach($periods as $period) {
+            if($filter_month == $period->yearmonth) {
+              $selected_month_display = date('F Y', strtotime($period->yearmonth.'-01'));
+              break;
+            }
+          }
+          echo htmlspecialchars($selected_month_display);
+        ?>
+      </button>
+      <div class="dropdown-menu w-100 p-0" aria-labelledby="period-dropdown">
+        <div class="p-2">
+          <input type="text" class="form-control period-search" placeholder="Search months...">
         </div>
+        <div class="dropdown-divider m-0"></div>
+        <div class="period-options-container" style="max-height:200px;overflow-y:auto;">
+          <a href="<?= site_url('dashboard') ?>" class="dropdown-item">Current Month (<?= date('F Y') ?>)</a>
+          <?php foreach($periods as $period): ?>
+            <a href="<?= site_url('dashboard?month=' . $period->yearmonth) ?>" class="dropdown-item" data-id="<?=$period->yearmonth;?>"><?=date('F Y', strtotime($period->yearmonth.'-01'));?></a>
+          <?php endforeach; ?>
+        </div>
+      </div>
     </div>
-    <div class="table-responsive">
-    <table class="table table-striped table-bordered">
-        <thead class="table-dark"><tr>
-            <th>#</th><th>Submitted By</th><th>Submitter Against</th><th>Month</th>
-            <?php foreach($questions as $q): ?>
-              <th><?=htmlspecialchars($q->text);?></th>
-            <?php endforeach; ?>
-        </tr></thead>
-        <tbody>
-        <?php foreach($submissions as $idx=>$s): ?>
-        <tr>
-            <td><?=($idx+1);?></td>
-            <td><?=$s->submitter;?> (<?=$s->submitter_role == 'tl' ? 'TL' : ($s->submitter_role == 'employee' ? 'EM' : 'Admin')?>)</td>
-            <td><?=$s->target;?> (<?=$s->target_role == 'tl' ? 'TL' : ($s->target_role == 'employee' ? 'EM' : 'Admin')?>)</td>
-            <td><?=date('F Y', strtotime($s->yearmonth.'-01'));?></td>
-            <?php
-              $CI =& get_instance();
-              // Fetch answers directly
-              $db = $CI->load->database('', true); // returns CI_DB_query_builder instance
-              $answers = $db->select('q.text, sa.rating, sa.comment')
-                            ->from('submission_answers sa')
-                            ->join('questions q','q.id = sa.question_id')
-                            ->where('sa.submission_id', $s->id)
-                            ->get()->result();
-              $answers_map = [];
-              foreach($answers as $answer){
-                  $answers_map[$answer->text] = $answer;
-              }
-              foreach($questions as $q){
-                  if(isset($answers_map[$q->text])){
-                      $a = $answers_map[$q->text];
-                      echo '<td><b>'.htmlspecialchars($a->rating).($a->comment ? '</b> ('.htmlspecialchars($a->comment).')' : '</b>').'</td>';
-                  }else{
-                      echo '<td>-</td>';
-                  }
-              }
-            ?>
-        </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
-    </div> -->
+  </div>
+</div>
+
 
     <div class="row mb-4">
   <div class="col-md-6 mb-3">
     <div class="card border-success h-100">
-      <div class="card-header bg-success text-white">Outstanding Performers</div>
+      <div class="card-header bg-success text-white">Outstanding Performers (<?= date('F Y', strtotime($selected_month.'-01')); ?>)</div>
       <div class="card-body">
         <?php if(!empty($outstanding)): ?>
           <ul class="list-unstyled mb-0">
@@ -245,14 +194,14 @@
             <?php endforeach; ?>
           </ul>
         <?php else: ?>
-          <p class="mb-0 text-muted">No outstanding reviews this month.</p>
+          <p class="mb-0 text-muted">No outstanding reviews for <?= date('F Y', strtotime($selected_month.'-01')); ?>.</p>
         <?php endif; ?>
       </div>
     </div>
   </div>
   <div class="col-md-6 mb-3">
     <div class="card border-danger h-100">
-      <div class="card-header bg-danger text-white">Needs Improvement</div>
+      <div class="card-header bg-danger text-white">Needs Improvement (<?= date('F Y', strtotime($selected_month.'-01')); ?>)</div>
       <div class="card-body">
         <?php if(!empty($low_performers)): ?>
           <ul class="list-unstyled mb-0">
@@ -261,7 +210,7 @@
             <?php endforeach; ?>
           </ul>
         <?php else: ?>
-          <p class="mb-0 text-muted">No low ratings this month.</p>
+          <p class="mb-0 text-muted">No low ratings for <?= date('F Y', strtotime($selected_month.'-01')); ?>.</p>
         <?php endif; ?>
       </div>
     </div>
@@ -343,6 +292,25 @@ document.addEventListener('DOMContentLoaded', function() {
       closeSidebar();
     }
   });
+  
+  // Period dropdown search functionality
+  const periodSearch = document.querySelector('.period-search');
+  if (periodSearch) {
+    periodSearch.addEventListener('input', function() {
+      const searchValue = this.value.toLowerCase();
+      const periodOptions = document.querySelectorAll('.period-options-container .dropdown-item');
+      
+      periodOptions.forEach(option => {
+        const text = option.textContent.toLowerCase();
+        if (text.includes(searchValue)) {
+          option.style.display = 'block';
+        } else {
+          option.style.display = 'none';
+        }
+      });
+    });
+  }
+  
 });
 </script>
 </div>

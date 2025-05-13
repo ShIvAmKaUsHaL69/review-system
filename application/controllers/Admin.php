@@ -33,7 +33,8 @@ class Admin extends MY_Controller
         if ($this->input->method() === 'post') {
             $this->Question_model->create(
                 $this->input->post('text'),
-                $this->input->post('for_role')
+                $this->input->post('for_role'),
+                $this->input->post('quater')
             );
             redirect('admin/questions');
         }
@@ -239,6 +240,10 @@ class Admin extends MY_Controller
         
         if ($this->input->post('role_id')) {
             $updateData['role_id'] = $this->input->post('role_id');
+        }
+
+        if ($this->input->post('designation')) {
+            $updateData['designation'] = $this->input->post('designation');
         }
         
         // Update the user

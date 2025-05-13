@@ -69,7 +69,7 @@ class User_model extends CI_Model
     public function update($id, $data)
     {
         // Filter valid fields to update
-        $validFields = ['name', 'email','password', 'tl_id', 'role_id'];
+        $validFields = ['name', 'email','password', 'tl_id', 'role_id' , 'designation'];
         $updateData = array_intersect_key($data, array_flip($validFields));
         
         // Only proceed if we have valid data to update
