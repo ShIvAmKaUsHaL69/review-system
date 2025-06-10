@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TL Dashboard</title>
+  <title>Change Password</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -20,6 +20,11 @@
   </style>
 </head>
 <body>
+<!-- Backdrop overlay -->
+<div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+<!-- Toggle button -->
+<button class="btn btn-dark menu-toggle" id="menu-toggle"><i class="fa-solid fa-bars" id="menu-icon"></i></button>
+
 <div class="d-flex" id="wrapper">
   <!-- Sidebar -->
   <nav id="sidebarMenu" class="bg-dark text-white p-3">
@@ -28,9 +33,9 @@
     </a>
     <hr class="text-secondary" />
     <ul class="nav nav-pills flex-column mb-auto">
-      <li class="nav-item mb-2"><a href="<?=site_url('/dashboard');?>" class="nav-link text-white <?php if(uri_string()==='dashboard') echo 'active bg-primary';?>"><i class="fa-solid fa-table-columns me-2"></i>Dashboard</a></li>
+      <li class="nav-item mb-2"><a href="<?=site_url('/dashboard');?>" class="nav-link text-white"><i class="fa-solid fa-table-columns me-2"></i>Dashboard</a></li>
       <li class="nav-item mb-2"><a href="<?=site_url('submit-rating'); ?>" class="nav-link text-white"><i class="fa-solid fa-star me-2"></i>Submit Rating</a></li>
-      <li class="nav-item mb-2"><a href="<?=site_url('change-password'); ?>" class="nav-link text-white <?php if(uri_string()==='change-password') echo 'active bg-primary';?>"><i class="fa-solid fa-key me-2"></i>Change Password</a></li>
+      <li class="nav-item mb-2"><a href="<?=site_url('change-password'); ?>" class="nav-link text-white active bg-primary"><i class="fa-solid fa-key me-2"></i>Change Password</a></li>
     </ul>
     <hr class="text-secondary" />
     <a href="<?=site_url('logout'); ?>" class="btn btn-outline-danger w-100"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a>
@@ -39,41 +44,28 @@
 
   <!-- Page content -->
   <div id="page-content" class="p-4">
+    <h4><i class="fa-solid fa-key me-2"></i>Change Password</h4>
 
-<h4>My Team Members</h4>
-<!-- Performance summaries for current month -->
+    <?php if ($this->session->flashdata('error')): ?>
+      <div class="alert alert-danger"><?= $this->session->flashdata('error'); ?></div>
+    <?php endif; ?>
+    <?php if ($this->session->flashdata('success')): ?>
+      <div class="alert alert-success"><?= $this->session->flashdata('success'); ?></div>
+    <?php endif; ?>
 
-<div class="table-responsive">
-<table class="table table-bordered table-striped">
-<thead class="table-dark"><tr><th>#</th><th>Name</th><th>Email</th><th>Designation</th><th>Action</th></tr></thead>
-<tbody>
-<?php foreach($employees as $idx=>$emp): ?>
-<?php $can = isset($can_submit[$emp->id]) ? $can_submit[$emp->id] : false; ?>
-<tr>
-  <td><?=($idx+1);?></td>
-  <td><?=$emp->name;?></td>
-  <td><?=$emp->email;?></td>
-  <td><?=$emp->designation;?></td>
-  <td>
-  <?php if($can): ?>
-  <a class="btn btn-sm btn-success" href="<?=site_url('submit-rating?target_id='.$emp->id);?>">Rate</a>
-  <?php else: ?>
-  
-  <?php endif; ?>
-  </td>
-</tr>
-<?php endforeach; ?>
-</tbody>
-</table>
-</div>
-
+    <form method="post" class="mt-3" style="max-width:400px;">
+      <div class="mb-3">
+        <label class="form-label">Enter New Password</label>
+        <input type="password" name="new_password" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Confirm Password</label>
+        <input type="password" name="confirm_password" class="form-control" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Save</button>
+    </form>
   </div>
 </div>
-<!-- Backdrop overlay -->
-<div class="sidebar-backdrop" id="sidebar-backdrop"></div>
-
-<!-- Toggle button -->
-<button class="btn btn-dark menu-toggle" id="menu-toggle"><i class="fa-solid fa-bars" id="menu-icon"></i></button>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>

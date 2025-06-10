@@ -57,6 +57,7 @@ $route['login']          = 'auth/login';
 $route['logout']         = 'auth/logout';
 $route['dashboard']      = 'dashboard';
 $route['submit-rating']  = 'rating/submit';
+$route['change-password'] = 'profile/change_password';
 
 $route['admin/users']     = 'admin/users';
 $route['admin/questions'] = 'admin/questions';

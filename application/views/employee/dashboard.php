@@ -43,6 +43,9 @@
       <li class="nav-item mb-2">
         <a href="<?=site_url('submit-rating'); ?>" class="nav-link text-white"><i class="fa-solid fa-star me-2"></i>Submit Rating</a>
       </li>
+      <li class="nav-item mb-2">
+        <a href="<?=site_url('change-password'); ?>" class="nav-link text-white <?php if(uri_string()==='change-password') echo 'active bg-primary';?>"><i class="fa-solid fa-key me-2"></i>Change Password</a>
+      </li>
     </ul>
     <hr class="text-secondary" />
     <a href="<?=site_url('logout'); ?>" class="btn btn-outline-danger w-100"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a>

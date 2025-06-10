@@ -97,13 +97,28 @@
     <div class="col-md-2">
     <select name="quater" class="form-select">
             <option value="0">Monthly</option>
-            <option value="1">Quatar 1 ( January )</option>
-            <option value="2">Quatar 2 ( April )</option>
-            <option value="3">Quatar 3 ( July )</option>
-            <option value="4">Quatar 4 ( October )</option>
+            <option value="1">Quater 1 ( March )</option>
+            <option value="2">Quater 2 ( June )</option>
+            <option value="3">Quater 3 ( September )</option>
+            <option value="4">Quater 4 ( December )</option>
         </select>
     </div>
     <div class="col-md-2"><button class="btn btn-primary w-100">Add</button></div>
+</form>
+
+<!-- Quarter filter -->
+<form method="get" class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+        <label class="form-label">Filter by Quarter</label>
+        <select name="filter_quater" class="form-select" onchange="this.form.submit()">
+            <option value="" <?= $filter_quater===''?'selected':'';?>>All</option>
+            <option value="0" <?= $filter_quater==='0'?'selected':'';?>>Monthly</option>
+            <option value="1" <?= $filter_quater==='1'?'selected':'';?>>Quarter 1 (March)</option>
+            <option value="2" <?= $filter_quater==='2'?'selected':'';?>>Quarter 2 (June)</option>
+            <option value="3" <?= $filter_quater==='3'?'selected':'';?>>Quarter 3 (September)</option>
+            <option value="4" <?= $filter_quater==='4'?'selected':'';?>>Quarter 4 (December)</option>
+        </select>
+    </div>
 </form>
 
 <div class="row">

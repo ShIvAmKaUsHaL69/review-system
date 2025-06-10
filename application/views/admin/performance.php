@@ -49,12 +49,33 @@
         <form method="get" action="<?=site_url('admin/performance');?>" class="row g-3">
           <div class="col-md-2">
             <label class="form-label">Team Lead</label>
-            <select name="tl_id" class="form-select">
-              <option value="">All Team Leads</option>
-              <?php foreach($tls as $tl): ?>
-              <option value="<?=$tl->id;?>" <?=($filter_tl==$tl->id?'selected':'');?>><?=$tl->name;?></option>
-              <?php endforeach; ?>
-            </select>
+            <div class="dropdown custom-select-dropdown">
+              <input type="hidden" name="tl_id" id="selected-tl" value="<?=$filter_tl;?>">
+              <button class="dropdown-toggle form-control text-start" type="button" id="tl-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <?php 
+                  $selected_tl = "All Team Leads";
+                  foreach($tls as $tl) {
+                    if($filter_tl == $tl->id) {
+                      $selected_tl = $tl->name;
+                      break;
+                    }
+                  }
+                  echo htmlspecialchars($selected_tl);
+                ?>
+              </button>
+              <div class="dropdown-menu w-100 p-0" aria-labelledby="tl-dropdown">
+                <div class="p-2">
+                  <input type="text" class="form-control tl-search" placeholder="Search team leads...">
+                </div>
+                <div class="dropdown-divider m-0"></div>
+                <div class="tl-options-container" style="max-height:200px;overflow-y:auto;">
+                  <button class="dropdown-item" type="button" data-id="">All Team Leads</button>
+                  <?php foreach($tls as $tl): ?>
+                    <button class="dropdown-item" type="button" data-id="<?=$tl->id;?>"><?=htmlspecialchars($tl->name);?></button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Review Type Filter -->
@@ -101,6 +122,7 @@
                 </div>
                 <div class="dropdown-divider m-0"></div>
                 <div class="period-options-container" style="max-height:200px;overflow-y:auto;">
+                  <button class="dropdown-item" type="button" data-id="">All Months</button>
                   <?php foreach($periods as $period): ?>
                     <button class="dropdown-item" type="button" data-id="<?=$period->id;?>"><?=date('F Y', strtotime($period->yearmonth.'-01'));?></button>
                   <?php endforeach; ?>
@@ -225,6 +247,36 @@ document.addEventListener('DOMContentLoaded', function() {
         const periodId = this.getAttribute('data-id');
         document.getElementById('selected-period').value = periodId;
         document.getElementById('period-dropdown').textContent = this.textContent;
+      });
+    });
+  }
+  
+  // Team Lead dropdown search functionality
+  const tlSearchInput = document.querySelector('.tl-search');
+  if (tlSearchInput) {
+    tlSearchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const options = document.querySelectorAll('.tl-options-container .dropdown-item');
+      
+      options.forEach(option => {
+        const optionText = option.textContent.toLowerCase();
+        if (searchTerm === '' || optionText.includes(searchTerm)) {
+          option.style.display = '';
+        } else {
+          option.style.display = 'none';
+        }
+      });
+    });
+  }
+  
+  // Team Lead dropdown option selection
+  const tlOptionsContainer = document.querySelector('.tl-options-container');
+  if (tlOptionsContainer) {
+    tlOptionsContainer.querySelectorAll('.dropdown-item').forEach(option => {
+      option.addEventListener('click', function() {
+        const tlId = this.getAttribute('data-id');
+        document.getElementById('selected-tl').value = tlId;
+        document.getElementById('tl-dropdown').textContent = this.textContent;
       });
     });
   }

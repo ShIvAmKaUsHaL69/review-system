@@ -30,6 +30,7 @@ class Admin extends MY_Controller
     /* Questions page */
     public function questions()
     {
+        // Handle new question creation
         if ($this->input->method() === 'post') {
             $this->Question_model->create(
                 $this->input->post('text'),
@@ -38,10 +39,18 @@ class Admin extends MY_Controller
             );
             redirect('admin/questions');
         }
-        $data['questions_tl']  = $this->Question_model->get_by_role(2);
-        $data['questions_emp'] = $this->Question_model->get_by_role(3);
-        $data['questions_emp_to_emp'] = $this->Question_model->get_by_role(4);
-        $this->load->view('admin/questions',$data);
+
+        // Optional quarter filter (GET)
+        $filter_quater = $this->input->get('filter_quater');
+
+        // Fetch questions with optional filter
+        $data['questions_tl']        = $this->Question_model->get_by_role(2, false, $filter_quater);
+        $data['questions_emp']       = $this->Question_model->get_by_role(3, false, $filter_quater);
+        $data['questions_emp_to_emp'] = $this->Question_model->get_by_role(4, false, $filter_quater);
+
+        $data['filter_quater'] = $filter_quater; // pass to view so dropdown remembers
+
+        $this->load->view('admin/questions', $data);
     }
 
     public function reviews($id = null)

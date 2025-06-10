@@ -90,7 +90,8 @@ class Rating extends MY_Controller
             }
         }
         
-        $data['questions']  = $this->Question_model->get_by_role($role_for_questions);
+        // Fetch questions relevant for the current month
+        $data['questions']  = $this->Question_model->get_by_role($role_for_questions, true);
         $data['targets']    = $targets;
         $data['preselect']  = $data_preselect_target;
         $this->load->view('rating/form', $data);

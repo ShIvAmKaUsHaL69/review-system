@@ -228,7 +228,7 @@
                   maintainAspectRatio: true,
                   plugins: {
                     legend: {
-                      position: 'right'
+                      position: 'top'
                     }
                   },
                   scales: {

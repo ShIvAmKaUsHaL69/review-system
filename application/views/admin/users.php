@@ -214,7 +214,7 @@
                                 <td class="editable editable-name" data-field="name"><?= $u->name; ?></td>
                                 <td class="editable editable-email" data-field="email"><?= $u->email; ?></td>
                                 <td class="editable editable-password" data-field="password"><?= $u->password; ?></td>
-                                <td class="editable editable-role" data-field="role_id"><?= $u->role_id == 2 ? '<span class="text-primary fw-bold">TL</span>' : '<span class="text-success">TM</span>'; ?></td>
+                                <td class="editable editable-role" data-field="role_id"><?= $u->role_id == 2 ? '<span class="text-success fw-bold">TL</span>' : '<span class="">TM</span>'; ?></td>
                                 <td class="editable editable-tl" data-field="tl_id"><?php if ($u->tl_id) {
                                         foreach ($tls as $t) if ($t->id == $u->tl_id) echo $t->name;
                                     } else { echo '-'; } ?></td>
