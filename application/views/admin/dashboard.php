@@ -92,6 +92,9 @@
       <li class="nav-item mb-2">
         <a href="<?=site_url('admin/charts');?>" class="nav-link text-white <?php if(uri_string()==='admin/charts') echo 'active bg-primary';?>"><i class="fa-solid fa-border-all me-2"></i>Rating Charts</a>
       </li>
+      <li class="nav-item mb-2">
+        <a href="<?=site_url('admin/complains'); ?>" class="nav-link text-white <?php if(uri_string()==='admin/complains') echo 'active bg-primary';?>"><i class="fa-solid fa-comment-dots me-2"></i>Anonymous</a>
+      </li>
     </ul>
     <hr class="text-secondary" />
     <div>
@@ -183,40 +186,72 @@
 
 
     <div class="row mb-4">
-  <div class="col-md-6 mb-3">
-    <div class="card border-success h-100">
-      <div class="card-header bg-success text-white">Outstanding Performers (<?= date('F Y', strtotime($selected_month.'-01')); ?>)</div>
-      <div class="card-body">
-        <?php if(!empty($outstanding)): ?>
-          <ul class="list-unstyled mb-0">
-            <?php foreach($outstanding as $o): ?>
-              <li><i class="fa-solid fa-star text-warning me-2"></i><?=htmlspecialchars($o->name);?></li>
-            <?php endforeach; ?>
-          </ul>
-        <?php else: ?>
-          <p class="mb-0 text-muted">No outstanding reviews for <?= date('F Y', strtotime($selected_month.'-01')); ?>.</p>
-        <?php endif; ?>
+      <div class="col-md-4 mb-3">
+        <div class="card border-success h-100">
+          <div class="card-header bg-success text-white">Outstanding Performers (<?= date('F Y', strtotime($selected_month.'-01')); ?>)</div>
+          <div class="card-body">
+            <?php if(!empty($outstanding)): ?>
+              <ul class="list-unstyled mb-0">
+                <?php 
+                // Sort outstanding array by rating ascending
+                usort($outstanding, function($a, $b) {
+                  return $b->avg_rating <=> $a->avg_rating;
+                });
+                foreach($outstanding as $o): ?>
+                  <li><i class="fa-solid fa-star text-warning me-2"></i><?=htmlspecialchars($o->name);?> (<?= round($o->avg_rating);?>)</li>
+                <?php endforeach; ?>
+              </ul>
+            <?php else: ?>
+              <p class="mb-0 text-muted">No outstanding reviews for <?= date('F Y', strtotime($selected_month.'-01')); ?>.</p>
+            <?php endif; ?>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="card border-danger h-100">
+          <div class="card-header bg-danger text-white">Needs Improvement (<?= date('F Y', strtotime($selected_month.'-01')); ?>)</div>
+          <div class="card-body">
+            <?php if(!empty($low_performers)): ?>
+              <ul class="list-unstyled mb-0">
+                <?php 
+                // Sort low_performers array by rating descending
+                usort($low_performers, function($a, $b) {
+                  return $b->avg_rating <=> $a->avg_rating;
+                });
+                foreach($low_performers as $lp): ?>
+                  <li><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i><?=htmlspecialchars($lp->name);?> (<?= round($lp->avg_rating);?>)</li>
+                <?php endforeach; ?>
+              </ul>
+            <?php else: ?>
+              <p class="mb-0 text-muted">No low ratings for <?= date('F Y', strtotime($selected_month.'-01')); ?>.</p>
+            <?php endif; ?>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="card border-warning h-100">
+          <div class="card-header bg-warning text-dark">Not Yet Rated (<?= date('F Y', strtotime($selected_month.'-01')); ?>)</div>
+          <div class="card-body">
+            <?php
+            $not_rated = array_filter(array_merge($tls, $employees), function($user) use ($rating_status) {
+              return !$rating_status[$user->id];
+            });
+            if(!empty($not_rated)): ?>
+              <ul class="list-unstyled mb-0">
+                <?php foreach($not_rated as $user): ?>
+                  <li>
+                    <i class="fa-solid fa-clock text-warning me-2"></i>
+                    <?=htmlspecialchars($user->name);?>
+                  </li>
+                <?php endforeach; ?>
+              </ul>
+            <?php else: ?>
+              <p class="mb-0 text-muted">Everyone has submitted their ratings for <?= date('F Y', strtotime($selected_month.'-01')); ?>.</p>
+            <?php endif; ?>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="col-md-6 mb-3">
-    <div class="card border-danger h-100">
-      <div class="card-header bg-danger text-white">Needs Improvement (<?= date('F Y', strtotime($selected_month.'-01')); ?>)</div>
-      <div class="card-body">
-        <?php if(!empty($low_performers)): ?>
-          <ul class="list-unstyled mb-0">
-            <?php foreach($low_performers as $lp): ?>
-              <li><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i><?=htmlspecialchars($lp->name);?></li>
-            <?php endforeach; ?>
-          </ul>
-        <?php else: ?>
-          <p class="mb-0 text-muted">No low ratings for <?= date('F Y', strtotime($selected_month.'-01')); ?>.</p>
-        <?php endif; ?>
-      </div>
-    </div>
-  </div>
-</div>   
-</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

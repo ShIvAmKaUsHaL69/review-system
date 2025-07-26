@@ -43,6 +43,16 @@ class User_model extends CI_Model
                         ->get()
                         ->result();
     }
+    
+    public function all_manager()
+    {
+        return $this->db->select('*')
+                        ->from($this->table)
+                        ->where('role_id', 5) // 5 = Manager
+                        ->order_by('name')
+                        ->get()
+                        ->result();
+    }
 
     /**
      * Return all employees, optionally filtered by tl_id.

@@ -143,4 +143,16 @@ class Submission_model extends CI_Model
                         ->get()
                         ->result();
     }
+
+    /**
+     * Check if a user has submitted any ratings in a specific month
+     */
+    public function has_rated_in_month($user_id, $yearmonth)
+    {
+        $period_id = $this->get_period_id($yearmonth);
+        if (!$period_id) return false;
+
+        return $this->db->where(['submitter_id' => $user_id, 'period_id' => $period_id])
+                       ->count_all_results('submissions') > 0;
+    }
 }

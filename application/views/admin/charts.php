@@ -51,6 +51,7 @@
       <li class="nav-item mb-2"><a href="<?=site_url('admin/questions');?>" class="nav-link text-white <?php if(uri_string()==='admin/questions') echo 'active bg-primary';?>"><i class="fa-solid fa-question me-2"></i>Questions</a></li>
       <li class="nav-item mb-2"><a href="<?=site_url('admin/performance');?>" class="nav-link text-white <?php if(uri_string()==='admin/performance') echo 'active bg-primary';?>"><i class="fa-solid fa-chart-simple me-2"></i>Team Performance</a></li>
       <li class="nav-item mb-2"><a href="<?=site_url('admin/charts');?>" class="nav-link text-white <?php if(uri_string()==='admin/charts') echo 'active bg-primary';?>"><i class="fa-solid fa-border-all me-2"></i>Rating Charts</a></li>
+      <li class="nav-item mb-2"><a href="<?=site_url('admin/complains'); ?>" class="nav-link text-white <?php if(uri_string()==='admin/complains') echo 'active bg-primary';?>"><i class="fa-solid fa-comment-dots me-2"></i>Anonymous</a></li>
     </ul>
     <hr class="text-secondary" />
     <a href="<?=site_url('logout'); ?>" class="btn btn-outline-danger w-100"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a>
@@ -65,7 +66,7 @@
       <div class="card-body">
         <form method="get" action="<?=site_url('admin/charts');?>" class="row g-3">
           <div class="col-md-4">
-            <label class="form-label">Select Employee / TL</label>
+            <label class="form-label">Select TM / TL</label>
             <div class="dropdown custom-select-dropdown">
               <input type="hidden" name="target_id" id="selected-user-id" value="<?=$target_id;?>" required>
               <button class=" btn-outline-secondary dropdown-toggle form-control text-start" type="button" id="user-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -73,7 +74,7 @@
                   $selected_name = "Choose...";
                   foreach($users as $u) {
                     if($target_id == $u->id) {
-                      $selected_name = $u->name . ' (' . ($u->role_id==2?'TL':'TM') . ')';
+                      $selected_name = $u->name . ' (' . ($u->role_id==2?'TL': ( $u->role_id==5 ? 'Manager' : 'TM')) . ')';
                       break;
                     }
                   }
@@ -90,7 +91,7 @@
                   if($u->id != "1") {
                   ?>
                   
-                    <button class="dropdown-item" type="button" data-id="<?=$u->id;?>"><?=$u->name;?> (<?=$u->role_id==2?'TL':'TM';?>)</button>
+                    <button class="dropdown-item" type="button" data-id="<?=$u->id;?>"><?=$u->name;?> (<?=$u->role_id==2?'TL': ( $u->role_id==3 ? 'TM' : ($u->role_id==5 ? 'Manager' : 'COO'));?>)</button>
                   <?php 
                   }
                   endforeach; ?>
@@ -102,12 +103,29 @@
           <div class="col-md-3">
             <label class="form-label">Start Month</label>
             <div class="dropdown custom-select-dropdown">
-              <input type="hidden" name="start_period" id="selected-start-period" value="<?=$start_period_id;?>" required>
+              <?php
+                // Determine default: current month if available, else use $start_period_id
+                $current_ym = date('Y-m');
+                $default_start_period_id = $start_period_id;
+                if (empty($start_period_id)) {
+                  foreach($periods as $p) {
+                    if ($p->yearmonth == $current_ym) {
+                      $default_start_period_id = $p->id;
+                      break;
+                    }
+                  }
+                  // fallback: first period if still not set
+                  if (empty($default_start_period_id) && !empty($periods)) {
+                    $default_start_period_id = $periods[0]->id;
+                  }
+                }
+              ?>
+              <input type="hidden" name="start_period" id="selected-start-period" value="<?=$default_start_period_id;?>" required>
               <button class=" btn-outline-secondary dropdown-toggle form-control text-start" type="button" id="start-period-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
                 <?php 
                   $selected_start_month = "Start";
                   foreach($periods as $p) {
-                    if($start_period_id == $p->id) {
+                    if($default_start_period_id == $p->id) {
                       $selected_start_month = date('F Y', strtotime($p->yearmonth.'-01'));
                       break;
                     }
@@ -132,12 +150,29 @@
           <div class="col-md-3">
             <label class="form-label">End Month</label>
             <div class="dropdown custom-select-dropdown">
-              <input type="hidden" name="end_period" id="selected-end-period" value="<?=$end_period_id;?>" required>
+              <?php
+                // Determine default: current month if available, else use $end_period_id
+                $current_ym = date('Y-m');
+                $default_end_period_id = $end_period_id;
+                if (empty($end_period_id)) {
+                  foreach($periods as $p) {
+                    if ($p->yearmonth == $current_ym) {
+                      $default_end_period_id = $p->id;
+                      break;
+                    }
+                  }
+                  // fallback: first period if still not set
+                  if (empty($default_end_period_id) && !empty($periods)) {
+                    $default_end_period_id = $periods[0]->id;
+                  }
+                }
+              ?>
+              <input type="hidden" name="end_period" id="selected-end-period" value="<?=$default_end_period_id;?>" required>
               <button class=" btn-outline-secondary dropdown-toggle form-control text-start" type="button" id="end-period-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
                 <?php 
                   $selected_end_month = "End";
                   foreach($periods as $p) {
-                    if($end_period_id == $p->id) {
+                    if($default_end_period_id == $p->id) {
                       $selected_end_month = date('F Y', strtotime($p->yearmonth.'-01'));
                       break;
                     }
@@ -181,7 +216,7 @@
             }
             $avgRating = $ratingCount ? round($totalRating / $ratingCount, 1) : 0;
           ?>
-          <h6 class="mb-3">Rated by <strong><?=$chart['submitter_name'];?></strong> (<?=strtoupper($chart['submitter_role']);?>) : Average rating <?=$avgRating;?></h6>
+          <h6 class="mb-3">Rated by <strong><?=$chart['submitter_name'];?></strong> (<?=strtoupper($chart['submitter_role']);?>) : Average rating <?=round($avgRating);?></h6>
           <?php
             // Prepare JavaScript data structures for the line-chart
             $canvasId   = 'chart_'.$idx;

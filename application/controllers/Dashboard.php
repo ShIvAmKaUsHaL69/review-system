@@ -46,6 +46,14 @@ class Dashboard extends MY_Controller
         
         // Performance summary stats for selected or current month
         $selectedYM = $filter_month ?: date('Y-m');
+        $data['selected_month'] = $selectedYM;
+
+        // Check rating status for each user
+        $rating_status = [];
+        foreach (array_merge($data['employees'], $data['tls']) as $user) {
+            $rating_status[$user->id] = $this->Submission_model->has_rated_in_month($user->id, $selectedYM);
+        }
+        $data['rating_status'] = $rating_status;
         
         // Build average rating per employee for selected month
         $avgRows = $this->db->select('u.id, u.name, AVG(sa.rating) as avg_rating')
@@ -70,7 +78,6 @@ class Dashboard extends MY_Controller
 
         $data['outstanding']    = $outstanding;
         $data['low_performers'] = $low;
-        $data['selected_month'] = $selectedYM;
         
         $this->load->view('admin/dashboard',$data);
     }

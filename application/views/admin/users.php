@@ -154,6 +154,7 @@
                 <li class="nav-item mb-2"><a href="<?= site_url('admin/questions'); ?>" class="nav-link text-white"><i class="fa-solid fa-question me-2"></i>Questions</a></li>
                 <li class="nav-item mb-2"><a href="<?= site_url('admin/performance'); ?>" class="nav-link text-white <?php if(uri_string()==='admin/performance') echo 'active bg-primary';?>"><i class="fa-solid fa-chart-simple me-2"></i>Team Performance</a></li>
                 <li class="nav-item mb-2"><a href="<?= site_url('admin/charts'); ?>" class="nav-link text-white <?php if(uri_string()==='admin/charts') echo 'active bg-primary';?>"><i class="fa-solid fa-border-all me-2"></i>Rating Charts</a></li>
+                <li class="nav-item mb-2"><a href="<?= site_url('admin/complains'); ?>" class="nav-link text-white <?php if(uri_string()==='admin/complains') echo 'active bg-primary';?>"><i class="fa-solid fa-comment-dots me-2"></i>Anonymous</a></li>
             </ul>
             <hr class="text-secondary" />
             <a href="<?= site_url('logout'); ?>" class="btn btn-outline-danger w-100"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a>
@@ -208,13 +209,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach (array_merge($tls, $employees) as $idx => $u): ?>
+                        <?php foreach (array_merge($tls, $employees, $managers) as $idx => $u): ?>
                             <tr class="user-row" data-id="<?= $u->id; ?>" data-role="<?= $u->role_id; ?>" data-tl="<?= $u->tl_id ?: ''; ?>">
                                 <td><?= ($idx + 1); ?></td>
                                 <td class="editable editable-name" data-field="name"><?= $u->name; ?></td>
                                 <td class="editable editable-email" data-field="email"><?= $u->email; ?></td>
                                 <td class="editable editable-password" data-field="password"><?= $u->password; ?></td>
-                                <td class="editable editable-role" data-field="role_id"><?= $u->role_id == 2 ? '<span class="text-success fw-bold">TL</span>' : '<span class="">TM</span>'; ?></td>
+                                <td class="editable editable-role" data-field="role_id"><?= $u->role_id == 2 ? '<span class="text-success fw-bold">TL</span>' : ( $u->role_id == 3 ? '<span class="">TM</span>' : '<span class="text-success fw-bold">Manager</span>'); ?> </td>
                                 <td class="editable editable-tl" data-field="tl_id"><?php if ($u->tl_id) {
                                         foreach ($tls as $t) if ($t->id == $u->tl_id) echo $t->name;
                                     } else { echo '-'; } ?></td>

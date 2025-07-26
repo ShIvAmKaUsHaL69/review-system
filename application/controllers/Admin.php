@@ -24,6 +24,8 @@ class Admin extends MY_Controller
         }
         $data['tls']       = $this->User_model->all_tl();
         $data['employees'] = $this->User_model->all_employees();
+        $data['managers'] = $this->User_model->all_manager();
+        
         $this->load->view('admin/users',$data);
     }
 
@@ -93,9 +95,14 @@ class Admin extends MY_Controller
         // Load dependencies
         $this->load->model(['Submission_model','Question_model']);
 
-        // Read filters from query string
+        // Get current month's period ID
+        $current_month = date('Y-m');
+        $current_period = $this->db->get_where('periods', ['yearmonth' => $current_month])->row();
+        $default_period = $current_period ? $current_period->id : null;
+
+        // Read filters from query string, default to current month if no filter set
         $filter_tl      = $this->input->get('tl_id');
-        $filter_period  = $this->input->get('period_id');
+        $filter_period  = $this->input->get('period_id') !== null ? $this->input->get('period_id') : $default_period;
         $filter_level   = $this->input->get('level'); // outstanding|good|average|bad|null
         $filter_type    = $this->input->get('review_type'); // tl_emp|emp_emp|emp_tl|null
 
@@ -106,6 +113,7 @@ class Admin extends MY_Controller
         $data['filter_period'] = $filter_period;
         $data['filter_level']  = $filter_level;
         $data['filter_type']   = $filter_type;
+        $data['current_month'] = $current_month;
 
         // Fetch submissions using helper with direction filter
         $submissions = $this->Submission_model->list_filtered($filter_tl, $filter_period, $filter_type);
@@ -357,5 +365,33 @@ class Admin extends MY_Controller
         }
 
         $this->load->view('admin/charts', $data);
+    }
+
+    public function complains()
+    {
+        $this->load->model('Complaint_model');
+
+        // Read filter params
+        $against_id   = $this->input->get('against_id');
+        $filter_month = $this->input->get('month'); // expects YYYY-MM or 'all'
+
+        // Default month = current month if none selected
+        if ($filter_month === null) {
+            $filter_month = date('Y-m');
+        }
+
+        // Prepare data for dropdowns
+        $data['users']  = $this->Complaint_model->get_against_users();
+        $data['months'] = $this->Complaint_model->get_available_months();
+
+        // Fetch complains via model with applied filters (skip month filter if "all")
+        $month_param = ($filter_month === 'all') ? null : $filter_month;
+        $data['complains'] = $this->Complaint_model->list_filtered($against_id, $month_param);
+
+        // Pass selected filters back to view
+        $data['filter_against_id'] = $against_id;
+        $data['filter_month']      = $filter_month;
+
+        $this->load->view('admin/complains', $data);
     }
 }

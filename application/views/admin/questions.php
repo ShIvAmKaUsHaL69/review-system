@@ -75,6 +75,7 @@
       <li class="nav-item mb-2"><a href="<?=site_url('admin/questions');?>" class="nav-link text-white active bg-primary"><i class="fa-solid fa-question me-2"></i>Questions</a></li>
       <li class="nav-item mb-2"><a href="<?=site_url('admin/performance');?>" class="nav-link text-white <?php if(uri_string()==='admin/performance') echo 'active bg-primary';?>"><i class="fa-solid fa-chart-simple me-2"></i>Team Performance</a></li>
       <li class="nav-item mb-2"><a href="<?=site_url('admin/charts');?>" class="nav-link text-white <?php if(uri_string()==='admin/charts') echo 'active bg-primary';?>"><i class="fa-solid fa-border-all me-2"></i>Rating Charts</a></li>
+      <li class="nav-item mb-2"><a href="<?=site_url('admin/complains'); ?>" class="nav-link text-white <?php if(uri_string()==='admin/complains') echo 'active bg-primary';?>"><i class="fa-solid fa-comment-dots me-2"></i>Anonymous</a></li>
     </ul>
     <hr class="text-secondary" />
     <a href="<?=site_url('logout'); ?>" class="btn btn-outline-danger w-100"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a>

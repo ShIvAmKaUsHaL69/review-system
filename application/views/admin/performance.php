@@ -34,6 +34,7 @@
       <li class="nav-item mb-2"><a href="<?=site_url('admin/questions');?>" class="nav-link text-white <?php if(uri_string()==='admin/questions') echo 'active bg-primary';?>"><i class="fa-solid fa-question me-2"></i>Questions</a></li>
       <li class="nav-item mb-2"><a href="<?=site_url('admin/performance');?>" class="nav-link text-white <?php if(uri_string()==='admin/performance') echo 'active bg-primary';?>"><i class="fa-solid fa-chart-simple me-2"></i>Team Performance</a></li>
       <li class="nav-item mb-2"><a href="<?=site_url('admin/charts');?>" class="nav-link text-white <?php if(uri_string()==='admin/charts') echo 'active bg-primary';?>"><i class="fa-solid fa-border-all me-2"></i>Rating Charts</a></li>
+      <li class="nav-item mb-2"><a href="<?=site_url('admin/complains'); ?>" class="nav-link text-white <?php if(uri_string()==='admin/complains') echo 'active bg-primary';?>"><i class="fa-solid fa-comment-dots me-2"></i>Anonymous</a></li>
     </ul>
     <hr class="text-secondary" />
     <a href="<?=site_url('logout'); ?>" class="btn btn-outline-danger w-100"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a>
@@ -123,8 +124,14 @@
                 <div class="dropdown-divider m-0"></div>
                 <div class="period-options-container" style="max-height:200px;overflow-y:auto;">
                   <button class="dropdown-item" type="button" data-id="">All Months</button>
-                  <?php foreach($periods as $period): ?>
-                    <button class="dropdown-item" type="button" data-id="<?=$period->id;?>"><?=date('F Y', strtotime($period->yearmonth.'-01'));?></button>
+                  <?php foreach($periods as $period): 
+                    $is_current = $period->yearmonth === $current_month;
+                    $is_selected = $filter_period == $period->id;
+                  ?>
+                    <button class="dropdown-item <?php if($is_current) echo 'fw-bold'; ?> <?php if($is_selected) echo 'active bg-primary text-white'; ?>" type="button" data-id="<?=$period->id;?>">
+                      <?=date('F Y', strtotime($period->yearmonth.'-01'));?>
+                      <?php if($is_current) echo ' (Current)'; ?>
+                    </button>
                   <?php endforeach; ?>
                 </div>
               </div>
@@ -153,7 +160,7 @@
             <td><?=$s->submitter;?> (<?=$s->submitter_role == 'tl' ? 'TL' : ($s->submitter_role == 'employee' ? 'TM' : 'Admin')?>)</td>
             <td><?=$s->target;?> (<?=$s->target_role == 'tl' ? 'TL' : ($s->target_role == 'employee' ? 'TM' : 'Admin')?>)</td>
             <td><?=date('F Y', strtotime($s->yearmonth.'-01'));?></td>
-            <td><b><?= $s->avg_rating !== null ? htmlspecialchars($s->avg_rating) : '-' ?></b></td>
+            <td><b><?= $s->avg_rating !== null ? htmlspecialchars(round($s->avg_rating)) : '-' ?></b></td>
             <?php
               $answers_map = isset($s->answers) ? $s->answers : [];
               foreach($questions as $q){

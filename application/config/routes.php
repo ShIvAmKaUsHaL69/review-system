@@ -58,8 +58,10 @@ $route['logout']         = 'auth/logout';
 $route['dashboard']      = 'dashboard';
 $route['submit-rating']  = 'rating/submit';
 $route['change-password'] = 'profile/change_password';
+$route['submit-complain']  = 'complain/submit';
 
 $route['admin/users']     = 'admin/users';
 $route['admin/questions'] = 'admin/questions';
 $route['admin/reviews']       = 'admin/reviews';
 $route['admin/get_review_json/(:num)'] = 'admin/get_review_json/$1';
+$route['admin/complains']  = 'admin/complains';
